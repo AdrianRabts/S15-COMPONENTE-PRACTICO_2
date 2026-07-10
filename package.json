@@ -1,6 +1,6 @@
 {
   "name": "gestor-tareas",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Gestor de Tareas (To-Do List) - Proyecto demo de Gestion de la Configuracion de Software",
   "main": "src/app.js",
   "scripts": {
