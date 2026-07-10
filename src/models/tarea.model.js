@@ -23,6 +23,12 @@ function marcarCompletada(id, completada) {
   return obtenerPorId(id);
 }
 
+function buscarPorTitulo(texto) {
+  return db
+    .prepare('SELECT * FROM tareas WHERE titulo LIKE ? ORDER BY id DESC')
+    .all(`%${texto}%`);
+}
+
 function eliminar(id) {
   const info = db.prepare('DELETE FROM tareas WHERE id = ?').run(id);
   return info.changes > 0;
@@ -33,5 +39,6 @@ module.exports = {
   obtenerPorId,
   crear,
   marcarCompletada,
+  buscarPorTitulo,
   eliminar,
 };
