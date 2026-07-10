@@ -5,6 +5,7 @@ const { validarCrearTarea, validarId } = require('../middlewares/validar.middlew
 const router = express.Router();
 
 router.get('/', tareasController.listar);
+router.get('/buscar', tareasController.buscar);
 router.post('/', validarCrearTarea, tareasController.crear);
 router.patch('/:id/completar', validarId, tareasController.completar);
 router.delete('/:id', validarId, tareasController.eliminar);
