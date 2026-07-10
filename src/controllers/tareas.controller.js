@@ -5,6 +5,13 @@ function listar(req, res) {
   res.json(tareas);
 }
 
+function crear(req, res) {
+  const { titulo, descripcion } = req.body;
+  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion });
+  res.status(201).json(tarea);
+}
+
 module.exports = {
   listar,
+  crear,
 };
