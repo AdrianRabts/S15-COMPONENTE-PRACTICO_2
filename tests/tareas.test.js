@@ -22,4 +22,12 @@ describe('API de tareas', () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
   });
+
+  test('PATCH /api/tareas/:id/completar marca una tarea como completada', async () => {
+    const creada = await request(app).post('/api/tareas').send({ titulo: 'Tarea a completar' });
+    const res = await request(app).patch(`/api/tareas/${creada.body.id}/completar`).send({ completada: true });
+
+    expect(res.status).toBe(200);
+    expect(res.body.completada).toBe(1);
+  });
 });
