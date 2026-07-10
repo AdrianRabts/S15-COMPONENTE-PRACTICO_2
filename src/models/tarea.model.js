@@ -29,6 +29,12 @@ function buscarPorTitulo(texto) {
     .all(`%${texto}%`);
 }
 
+function contarPorEstado() {
+  const completadas = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 1').get().total;
+  const pendientes = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 0').get().total;
+  return { completadas, pendientes };
+}
+
 function eliminar(id) {
   const info = db.prepare('DELETE FROM tareas WHERE id = ?').run(id);
   return info.changes > 0;
@@ -40,5 +46,6 @@ module.exports = {
   crear,
   marcarCompletada,
   buscarPorTitulo,
+  contarPorEstado,
   eliminar,
 };
