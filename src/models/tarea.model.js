@@ -8,10 +8,10 @@ function obtenerPorId(id) {
   return db.prepare('SELECT * FROM tareas WHERE id = ?').get(id);
 }
 
-function crear({ titulo, descripcion }) {
+function crear({ titulo, descripcion, prioridad }) {
   const info = db
-    .prepare('INSERT INTO tareas (titulo, descripcion) VALUES (?, ?)')
-    .run(titulo, descripcion || null);
+    .prepare('INSERT INTO tareas (titulo, descripcion, prioridad) VALUES (?, ?, ?)')
+    .run(titulo, descripcion || null, prioridad || 'media');
   return obtenerPorId(info.lastInsertRowid);
 }
 
