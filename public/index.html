@@ -480,10 +480,48 @@
   }
 
   @media (max-width: 480px) {
+    body {
+      padding: 16px 12px 40px;
+    }
+
     .form-tarea,
     .filtros {
       flex-direction: column;
       align-items: stretch;
+    }
+
+    .filtros {
+      flex-wrap: wrap;
+    }
+
+    .filtros .chip {
+      flex: 1;
+      text-align: center;
+    }
+
+    li.tarea .fila-principal {
+      flex-wrap: wrap;
+      row-gap: 6px;
+    }
+
+    .stats-numeros {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+
+    .toasts {
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+    }
+
+    .toast {
+      width: 100%;
+    }
+
+    .eliminar,
+    .editar {
+      visibility: visible;
     }
   }
 </style>
