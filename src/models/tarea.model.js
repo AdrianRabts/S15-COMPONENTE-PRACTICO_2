@@ -21,9 +21,10 @@ function crear({ titulo, descripcion, prioridad, fecha_limite: fechaLimite, subt
 }
 
 function marcarCompletada(id, completada) {
+  const fechaCompletado = completada ? new Date().toISOString() : null;
   const info = db
-    .prepare('UPDATE tareas SET completada = ? WHERE id = ?')
-    .run(completada ? 1 : 0, id);
+    .prepare('UPDATE tareas SET completada = ?, fecha_completado = ? WHERE id = ?')
+    .run(completada ? 1 : 0, fechaCompletado, id);
   if (info.changes === 0) return null;
   return obtenerPorId(id);
 }

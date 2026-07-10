@@ -30,4 +30,8 @@ if (!columnas.includes('subtareas')) {
   db.exec('ALTER TABLE tareas ADD COLUMN subtareas TEXT');
 }
 
+if (!columnas.includes('fecha_completado')) {
+  db.exec('ALTER TABLE tareas ADD COLUMN fecha_completado TEXT');
+}
+
 module.exports = db;
