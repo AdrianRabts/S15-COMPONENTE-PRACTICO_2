@@ -66,11 +66,17 @@ npm test
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/tareas` | Lista todas las tareas (o filtra con `?buscar=`) |
-| POST | `/api/tareas` | Crea una tarea (`titulo`, `descripcion`, `prioridad`) |
+| POST | `/api/tareas` | Crea una tarea (`titulo`, `descripcion`, `prioridad`, `fecha_limite`, `subtareas`) |
 | GET | `/api/tareas/buscar?titulo=` | Busca tareas por título |
-| GET | `/api/tareas/reporte` | Cuenta tareas completadas vs pendientes |
+| GET | `/api/tareas/reporte` | Cuenta tareas completadas, pendientes y vencidas |
+| PATCH | `/api/tareas/:id` | Edita título y/o fecha límite de una tarea |
 | PATCH | `/api/tareas/:id/completar` | Marca una tarea como completada |
+| PATCH | `/api/tareas/:id/subtareas/:index` | Togglea una subtarea puntual |
 | DELETE | `/api/tareas/:id` | Elimina una tarea |
+
+### Frontend (tema terminal/CI)
+
+El frontend (`public/index.html`) sigue un tema visual de "terminal + log de commits", coherente con el enfoque DevOps del proyecto: panel de stats con barra de progreso, activity log en vivo, edición inline del título, notificaciones toast, orden por prioridad/fecha límite, y checklist de subtareas expandible por tarea.
 
 ## Integración Continua
 
