@@ -1,6 +1,6 @@
 # Gestor de Tareas
 
-![CI](https://github.com/OWNER/gestor-tareas/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/AdrianRabts/S15-COMPONENTE-PRACTICO_2/actions/workflows/ci.yml/badge.svg)
 
 Aplicación simple de gestión de tareas (To-Do List) construida con Node.js, Express y SQLite.
 
