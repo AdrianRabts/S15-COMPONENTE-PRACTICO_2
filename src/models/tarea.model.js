@@ -8,10 +8,10 @@ function obtenerPorId(id) {
   return db.prepare('SELECT * FROM tareas WHERE id = ?').get(id);
 }
 
-function crear({ titulo, descripcion }) {
+function crear({ titulo, descripcion, prioridad }) {
   const info = db
-    .prepare('INSERT INTO tareas (titulo, descripcion) VALUES (?, ?)')
-    .run(titulo, descripcion || null);
+    .prepare('INSERT INTO tareas (titulo, descripcion, prioridad) VALUES (?, ?, ?)')
+    .run(titulo, descripcion || null, prioridad || 'media');
   return obtenerPorId(info.lastInsertRowid);
 }
 
@@ -21,6 +21,19 @@ function marcarCompletada(id, completada) {
     .run(completada ? 1 : 0, id);
   if (info.changes === 0) return null;
   return obtenerPorId(id);
+}
+
+function buscarPorTitulo(texto) {
+  const textoEscapado = texto.replace(/[%_]/g, '\\$&');
+  return db
+    .prepare("SELECT * FROM tareas WHERE titulo LIKE ? ESCAPE '\\' ORDER BY id DESC")
+    .all(`%${textoEscapado}%`);
+}
+
+function contarPorEstado() {
+  const completadas = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 1').get().total;
+  const pendientes = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 0').get().total;
+  return { completadas, pendientes };
 }
 
 function eliminar(id) {
@@ -33,5 +46,7 @@ module.exports = {
   obtenerPorId,
   crear,
   marcarCompletada,
+  buscarPorTitulo,
+  contarPorEstado,
   eliminar,
 };

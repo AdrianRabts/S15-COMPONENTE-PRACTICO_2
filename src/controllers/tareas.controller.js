@@ -1,13 +1,29 @@
 const tareaModel = require('../models/tarea.model');
 
 function listar(req, res) {
+  const { buscar } = req.query;
+
+  if (buscar) {
+    return res.json(tareaModel.buscarPorTitulo(buscar));
+  }
+
   const tareas = tareaModel.obtenerTodas();
   res.json(tareas);
 }
 
+function buscar(req, res) {
+  const { titulo } = req.query;
+
+  if (!titulo) {
+    return res.status(400).json({ error: 'El parámetro "titulo" es obligatorio para buscar.' });
+  }
+
+  res.json(tareaModel.buscarPorTitulo(titulo));
+}
+
 function crear(req, res) {
-  const { titulo, descripcion } = req.body;
-  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion });
+  const { titulo, descripcion, prioridad } = req.body;
+  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion, prioridad });
   res.status(201).json(tarea);
 }
 
@@ -34,9 +50,15 @@ function eliminar(req, res) {
   res.status(204).send();
 }
 
+function reporte(req, res) {
+  res.json(tareaModel.contarPorEstado());
+}
+
 module.exports = {
   listar,
   crear,
   completar,
   eliminar,
+  buscar,
+  reporte,
 };

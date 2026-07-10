@@ -19,6 +19,25 @@ La app corre por defecto en `http://localhost:3000`.
 npm test
 ```
 
+## V1 vs V2
+
+- **V1** (`v1.0.0`): CRUD básico de tareas — crear, listar, completar y eliminar.
+- **V2** (`v2.0.0`, rama `feature/busqueda-y-reportes`): todo lo de V1, más:
+  - Búsqueda de tareas por título (`GET /api/tareas/buscar?titulo=...` o `GET /api/tareas?buscar=...`)
+  - Prioridad (`alta` / `media` / `baja`) al crear una tarea
+  - Reporte de tareas completadas vs pendientes (`GET /api/tareas/reporte`)
+
+## Endpoints principales
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/tareas` | Lista todas las tareas (o filtra con `?buscar=`) |
+| POST | `/api/tareas` | Crea una tarea (`titulo`, `descripcion`, `prioridad`) |
+| GET | `/api/tareas/buscar?titulo=` | Busca tareas por título |
+| GET | `/api/tareas/reporte` | Cuenta tareas completadas vs pendientes |
+| PATCH | `/api/tareas/:id/completar` | Marca una tarea como completada |
+| DELETE | `/api/tareas/:id` | Elimina una tarea |
+
 ## Integración Continua
 
 Cada `push` y `pull request` a `main` dispara el workflow definido en `.github/workflows/ci.yml`, que instala dependencias, corre el linter (ESLint) y ejecuta los tests (Jest).
