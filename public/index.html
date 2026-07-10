@@ -301,9 +301,21 @@
   .filtros {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    justify-content: space-between;
     align-items: center;
+    gap: 16px;
     margin-bottom: 20px;
+  }
+
+  .filtros-buscar {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .filtros-controles {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
 
   .filtros input[type="text"] {
@@ -312,9 +324,8 @@
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
-    padding: 8px 12px;
-    flex: 1;
-    min-width: 140px;
+    padding: 10px 12px;
+    width: 100%;
   }
 
   .filtros input[type="text"]::placeholder {
@@ -322,7 +333,7 @@
   }
 
   select#orden {
-    padding: 8px 10px;
+    padding: 9px 10px;
     font-size: 12px;
   }
 
@@ -358,14 +369,19 @@
     list-style: none;
     padding: 0;
     margin: 0 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   li.tarea {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 6px;
-    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
     transition: opacity 0.25s ease, transform 0.25s ease;
   }
 
@@ -697,15 +713,19 @@
   </div>
 
   <div class="filtros">
-    <input type="text" id="buscar" placeholder="grep..." />
-    <select id="orden">
-      <option value="reciente">más reciente</option>
-      <option value="prioridad">prioridad</option>
-      <option value="fecha_limite">fecha límite</option>
-    </select>
-    <button type="button" class="chip" data-prioridad="alta">Alta</button>
-    <button type="button" class="chip" data-prioridad="media">Media</button>
-    <button type="button" class="chip" data-prioridad="baja">Baja</button>
+    <div class="filtros-buscar">
+      <input type="text" id="buscar" placeholder="grep tareas..." />
+    </div>
+    <div class="filtros-controles">
+      <select id="orden">
+        <option value="reciente">más reciente</option>
+        <option value="prioridad">prioridad</option>
+        <option value="fecha_limite">fecha límite</option>
+      </select>
+      <button type="button" class="chip" data-prioridad="alta">Alta</button>
+      <button type="button" class="chip" data-prioridad="media">Media</button>
+      <button type="button" class="chip" data-prioridad="baja">Baja</button>
+    </div>
   </div>
 
   <ul id="lista-tareas"></ul>
