@@ -50,10 +50,15 @@ function eliminar(req, res) {
   res.status(204).send();
 }
 
+function reporte(req, res) {
+  res.json(tareaModel.contarPorEstado());
+}
+
 module.exports = {
   listar,
   crear,
   completar,
   eliminar,
   buscar,
+  reporte,
 };
