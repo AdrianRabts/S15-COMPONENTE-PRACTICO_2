@@ -98,6 +98,21 @@
     color: var(--text-primary);
   }
 
+  .guia-app {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    padding: 0 4px;
+  }
+
+  .guia-tarea {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+  }
+
   @keyframes parpadeo {
     0%, 50% { opacity: 1; }
     51%, 100% { opacity: 0; }
@@ -553,7 +568,8 @@
 
   /* Estado vacío */
   .vacio {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
+    font-size: 15px;
     color: var(--text-secondary);
     text-align: center;
     padding: 32px 0;
@@ -666,17 +682,20 @@
     <h1>gestor-tareas $ <span id="cursor">_</span></h1>
   </header>
 
+  <p class="guia-app">Organiza tus pendientes: créalos, márcalos como completados y sigue tu progreso.</p>
+
   <div class="card">
     <p class="card-label">Nueva tarea</p>
+    <p class="guia-tarea">Crea una tarea para empezar</p>
     <form class="form-tarea" id="form-tarea">
       <div class="campo">
         <label for="titulo">Título</label>
-        <input type="text" id="titulo" placeholder="&gt; ¿qué hay que hacer?" required />
+        <input type="text" id="titulo" placeholder="¿Qué tienes que hacer?" required />
       </div>
 
       <div class="campo">
         <label for="descripcion">Descripción</label>
-        <input type="text" id="descripcion" placeholder="Descripción" />
+        <input type="text" id="descripcion" placeholder="Agrega detalles (opcional)" />
       </div>
 
       <div class="fila-fecha-prioridad">
@@ -722,13 +741,13 @@
 
     <p class="activity-log-titulo">Actividad reciente</p>
     <div class="activity-log" id="activity-log">
-      <span class="vacio-log">$ sin actividad reciente</span>
+      <span class="vacio-log">Aquí verás tus últimas acciones</span>
     </div>
   </div>
 
   <div class="filtros">
     <div class="filtros-buscar">
-      <input type="text" id="buscar" placeholder="grep tareas..." />
+      <input type="text" id="buscar" placeholder="Buscar tarea..." />
     </div>
     <div class="filtros-controles">
       <select id="orden">
@@ -744,7 +763,7 @@
 
   <ul id="lista-tareas"></ul>
 
-  <p class="vacio" id="estado-vacio" hidden>$ no hay tareas — agrega la primera arriba</p>
+  <p class="vacio" id="estado-vacio" hidden>Aún no tienes tareas. Escribe la primera arriba y presiona "Crear tarea".</p>
 
   <div class="reporte">
     ── reporte ──────────────────────<br />
@@ -786,7 +805,7 @@
 
     function renderizarActividad() {
       if (actividades.length === 0) {
-        activityLog.innerHTML = '<span class="vacio-log">$ sin actividad reciente</span>';
+        activityLog.innerHTML = '<span class="vacio-log">Aquí verás tus últimas acciones</span>';
         return;
       }
       activityLog.innerHTML = actividades
