@@ -23,8 +23,20 @@ function completar(req, res) {
   res.json(tarea);
 }
 
+function eliminar(req, res) {
+  const { id } = req.params;
+  const eliminada = tareaModel.eliminar(id);
+
+  if (!eliminada) {
+    return res.status(404).json({ error: 'Tarea no encontrada' });
+  }
+
+  res.status(204).send();
+}
+
 module.exports = {
   listar,
   crear,
   completar,
+  eliminar,
 };
