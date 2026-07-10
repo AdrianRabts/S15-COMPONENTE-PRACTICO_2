@@ -42,4 +42,12 @@ describe('API de tareas', () => {
     const res = await request(app).post('/api/tareas').send({ descripcion: 'sin titulo' });
     expect(res.status).toBe(400);
   });
+
+  test('GET /api/tareas/buscar encuentra tareas por título', async () => {
+    await request(app).post('/api/tareas').send({ titulo: 'Comprar leche' });
+    const res = await request(app).get('/api/tareas/buscar?titulo=leche');
+
+    expect(res.status).toBe(200);
+    expect(res.body.some((tarea) => tarea.titulo.includes('leche'))).toBe(true);
+  });
 });
