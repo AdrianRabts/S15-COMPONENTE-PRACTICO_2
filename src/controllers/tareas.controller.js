@@ -1,13 +1,13 @@
 const tareaModel = require('../models/tarea.model');
 
 function listar(req, res) {
-  const { buscar } = req.query;
+  const { buscar, userId } = req.query;
 
   if (buscar) {
-    return res.json(tareaModel.buscarPorTitulo(buscar));
+    return res.json(tareaModel.buscarPorTitulo(buscar, req.user, userId));
   }
 
-  const tareas = tareaModel.obtenerTodas();
+  const tareas = tareaModel.obtenerTodas(req.user, userId);
   res.json(tareas);
 }
 
@@ -18,7 +18,7 @@ function buscar(req, res) {
     return res.status(400).json({ error: 'El parámetro "titulo" es obligatorio para buscar.' });
   }
 
-  res.json(tareaModel.buscarPorTitulo(titulo));
+  res.json(tareaModel.buscarPorTitulo(titulo, req.user, req.query.userId));
 }
 
 function crear(req, res) {
@@ -29,6 +29,7 @@ function crear(req, res) {
     prioridad,
     fecha_limite: fechaLimite,
     subtareas,
+    user_id: req.user.id,
   });
   res.status(201).json(tarea);
 }
@@ -36,7 +37,7 @@ function crear(req, res) {
 function actualizar(req, res) {
   const { id } = req.params;
   const { titulo, fecha_limite: fechaLimite } = req.body;
-  const tarea = tareaModel.actualizar(id, { titulo, fecha_limite: fechaLimite });
+  const tarea = tareaModel.actualizar(id, { titulo, fecha_limite: fechaLimite }, req.user);
 
   if (!tarea) {
     return res.status(404).json({ error: 'Tarea no encontrada' });
@@ -47,7 +48,7 @@ function actualizar(req, res) {
 
 function toggleSubtarea(req, res) {
   const { id, index } = req.params;
-  const tarea = tareaModel.toggleSubtarea(id, Number(index));
+  const tarea = tareaModel.toggleSubtarea(id, Number(index), req.user);
 
   if (!tarea) {
     return res.status(404).json({ error: 'Tarea o subtarea no encontrada' });
@@ -59,7 +60,7 @@ function toggleSubtarea(req, res) {
 function completar(req, res) {
   const { id } = req.params;
   const completada = req.body.completada !== undefined ? req.body.completada : true;
-  const tarea = tareaModel.marcarCompletada(id, completada);
+  const tarea = tareaModel.marcarCompletada(id, completada, req.user);
 
   if (!tarea) {
     return res.status(404).json({ error: 'Tarea no encontrada' });
@@ -70,7 +71,7 @@ function completar(req, res) {
 
 function eliminar(req, res) {
   const { id } = req.params;
-  const eliminada = tareaModel.eliminar(id);
+  const eliminada = tareaModel.eliminar(id, req.user);
 
   if (!eliminada) {
     return res.status(404).json({ error: 'Tarea no encontrada' });
@@ -80,7 +81,7 @@ function eliminar(req, res) {
 }
 
 function reporte(req, res) {
-  res.json(tareaModel.contarPorEstado());
+  res.json(tareaModel.contarPorEstado(req.user, req.query.userId));
 }
 
 module.exports = {

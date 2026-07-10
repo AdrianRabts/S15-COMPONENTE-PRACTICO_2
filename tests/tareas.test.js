@@ -1,9 +1,29 @@
 process.env.DB_PATH = ':memory:';
+process.env.ADMIN_EMAIL = 'admin@local';
+process.env.ADMIN_PASSWORD = 'admin123';
 
 const request = require('supertest');
 const app = require('../src/app');
 
+async function loginAdmin() {
+  const res = await request(app)
+    .post('/api/auth/login')
+    .send({ email: 'admin@local', password: 'admin123' });
+
+  return res.body.token;
+}
+
 describe('API de tareas', () => {
+  let token;
+
+  beforeAll(async () => {
+    token = await loginAdmin();
+  });
+
+  function authed(method, url) {
+    return request(app)[method](url).set('Authorization', `Bearer ${token}`);
+  }
+
   test('GET /health responde con status ok', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
@@ -11,8 +31,7 @@ describe('API de tareas', () => {
   });
 
   test('POST /api/tareas crea una tarea nueva', async () => {
-    const res = await request(app)
-      .post('/api/tareas')
+    const res = await authed('post', '/api/tareas')
       .send({ titulo: 'Comprar pan', descripcion: 'Del panaderia de la esquina' });
 
     expect(res.status).toBe(201);
@@ -21,8 +40,8 @@ describe('API de tareas', () => {
   });
 
   test('GET /api/tareas lista las tareas creadas', async () => {
-    await request(app).post('/api/tareas').send({ titulo: 'Tarea de prueba' });
-    const res = await request(app).get('/api/tareas');
+    await authed('post', '/api/tareas').send({ titulo: 'Tarea de prueba' });
+    const res = await authed('get', '/api/tareas');
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -30,38 +49,38 @@ describe('API de tareas', () => {
   });
 
   test('PATCH /api/tareas/:id/completar marca una tarea como completada', async () => {
-    const creada = await request(app).post('/api/tareas').send({ titulo: 'Tarea a completar' });
-    const res = await request(app).patch(`/api/tareas/${creada.body.id}/completar`).send({ completada: true });
+    const creada = await authed('post', '/api/tareas').send({ titulo: 'Tarea a completar' });
+    const res = await authed('patch', `/api/tareas/${creada.body.id}/completar`).send({ completada: true });
 
     expect(res.status).toBe(200);
     expect(res.body.completada).toBe(1);
   });
 
   test('DELETE /api/tareas/:id elimina una tarea', async () => {
-    const creada = await request(app).post('/api/tareas').send({ titulo: 'Tarea a eliminar' });
-    const res = await request(app).delete(`/api/tareas/${creada.body.id}`);
+    const creada = await authed('post', '/api/tareas').send({ titulo: 'Tarea a eliminar' });
+    const res = await authed('delete', `/api/tareas/${creada.body.id}`);
 
     expect(res.status).toBe(204);
   });
 
   test('POST /api/tareas sin titulo devuelve error 400', async () => {
-    const res = await request(app).post('/api/tareas').send({ descripcion: 'sin titulo' });
+    const res = await authed('post', '/api/tareas').send({ descripcion: 'sin titulo' });
     expect(res.status).toBe(400);
   });
 
-  test('GET /api/tareas/buscar encuentra tareas por título', async () => {
-    await request(app).post('/api/tareas').send({ titulo: 'Comprar leche' });
-    const res = await request(app).get('/api/tareas/buscar?titulo=leche');
+  test('GET /api/tareas/buscar encuentra tareas por titulo', async () => {
+    await authed('post', '/api/tareas').send({ titulo: 'Comprar leche' });
+    const res = await authed('get', '/api/tareas/buscar?titulo=leche');
 
     expect(res.status).toBe(200);
     expect(res.body.some((tarea) => tarea.titulo.includes('leche'))).toBe(true);
   });
 
   test('GET /api/tareas/reporte cuenta tareas completadas vs pendientes', async () => {
-    const creada = await request(app).post('/api/tareas').send({ titulo: 'Tarea para reporte' });
-    await request(app).patch(`/api/tareas/${creada.body.id}/completar`).send({ completada: true });
+    const creada = await authed('post', '/api/tareas').send({ titulo: 'Tarea para reporte' });
+    await authed('patch', `/api/tareas/${creada.body.id}/completar`).send({ completada: true });
 
-    const res = await request(app).get('/api/tareas/reporte');
+    const res = await authed('get', '/api/tareas/reporte');
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('completadas');
@@ -70,26 +89,26 @@ describe('API de tareas', () => {
   });
 
   test('POST /api/tareas asigna prioridad "alta" cuando se especifica', async () => {
-    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea urgente', prioridad: 'alta' });
+    const res = await authed('post', '/api/tareas').send({ titulo: 'Tarea urgente', prioridad: 'alta' });
 
     expect(res.status).toBe(201);
     expect(res.body.prioridad).toBe('alta');
   });
 
   test('POST /api/tareas asigna prioridad "media" por defecto', async () => {
-    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea sin prioridad' });
+    const res = await authed('post', '/api/tareas').send({ titulo: 'Tarea sin prioridad' });
 
     expect(res.status).toBe(201);
     expect(res.body.prioridad).toBe('media');
   });
 
-  test('POST /api/tareas con prioridad inválida devuelve error 400', async () => {
-    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea rara', prioridad: 'urgentisima' });
+  test('POST /api/tareas con prioridad invalida devuelve error 400', async () => {
+    const res = await authed('post', '/api/tareas').send({ titulo: 'Tarea rara', prioridad: 'urgentisima' });
     expect(res.status).toBe(400);
   });
 
   test('POST /api/tareas acepta fecha_limite y subtareas opcionales', async () => {
-    const res = await request(app).post('/api/tareas').send({
+    const res = await authed('post', '/api/tareas').send({
       titulo: 'Tarea con checklist',
       fecha_limite: '2026-08-01',
       subtareas: [{ texto: 'paso 1', completada: false }],
@@ -101,28 +120,28 @@ describe('API de tareas', () => {
   });
 
   test('PATCH /api/tareas/:id/subtareas/:index togglea una subtarea puntual', async () => {
-    const creada = await request(app).post('/api/tareas').send({
+    const creada = await authed('post', '/api/tareas').send({
       titulo: 'Tarea con checklist 2',
       subtareas: [{ texto: 'paso 1', completada: false }],
     });
 
-    const res = await request(app).patch(`/api/tareas/${creada.body.id}/subtareas/0`);
+    const res = await authed('patch', `/api/tareas/${creada.body.id}/subtareas/0`);
 
     expect(res.status).toBe(200);
     expect(res.body.subtareas[0].completada).toBe(true);
   });
 
-  test('PATCH /api/tareas/:id edita el título de una tarea', async () => {
-    const creada = await request(app).post('/api/tareas').send({ titulo: 'Título original' });
-    const res = await request(app).patch(`/api/tareas/${creada.body.id}`).send({ titulo: 'Título editado' });
+  test('PATCH /api/tareas/:id edita el titulo de una tarea', async () => {
+    const creada = await authed('post', '/api/tareas').send({ titulo: 'Titulo original' });
+    const res = await authed('patch', `/api/tareas/${creada.body.id}`).send({ titulo: 'Titulo editado' });
 
     expect(res.status).toBe(200);
-    expect(res.body.titulo).toBe('Título editado');
+    expect(res.body.titulo).toBe('Titulo editado');
   });
 
   test('GET /api/tareas/reporte incluye tareas vencidas', async () => {
-    await request(app).post('/api/tareas').send({ titulo: 'Tarea vencida', fecha_limite: '2000-01-01' });
-    const res = await request(app).get('/api/tareas/reporte');
+    await authed('post', '/api/tareas').send({ titulo: 'Tarea vencida', fecha_limite: '2000-01-01' });
+    const res = await authed('get', '/api/tareas/reporte');
 
     expect(res.status).toBe(200);
     expect(res.body.vencidas).toBeGreaterThanOrEqual(1);

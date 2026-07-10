@@ -24,7 +24,18 @@ function validarId(req, res, next) {
   next();
 }
 
+function validarEstadoUsuario(req, res, next) {
+  const { activo } = req.body;
+
+  if (typeof activo !== 'boolean') {
+    return res.status(400).json({ error: 'El campo "activo" debe ser booleano.' });
+  }
+
+  next();
+}
+
 module.exports = {
   validarCrearTarea,
   validarId,
+  validarEstadoUsuario,
 };

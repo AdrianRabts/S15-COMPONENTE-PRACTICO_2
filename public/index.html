@@ -1,1469 +1,312 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Gestor de Tareas</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2314171C'/%3E%3Ctext x='50' y='68' font-size='60' text-anchor='middle' fill='%235B8DEF' font-family='monospace'%3E%3E_%3C/text%3E%3C/svg%3E" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  :root {
-    --bg: #14171C;
-    --surface: #1C2129;
-    --border: #2A3038;
-    --text-primary: #E8EAED;
-    --text-secondary: #8B92A0;
-    --accent: #5B8DEF;
-    --completed: #14B8A6;
-    --priority-alta: #F0654B;
-    --priority-media: #F5B84D;
-    --priority-baja: #6B7280;
-
-    --font-mono: 'JetBrains Mono', monospace;
-    --font-sans: 'Inter', sans-serif;
-  }
-
-  * {
-    box-sizing: border-box;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 24px 16px 48px;
-  }
-
-  a {
-    color: var(--accent);
-  }
-
-  *:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  /* Sistema de cards */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 20px;
-  }
-
-  .card + .card {
-    margin-top: 0;
-  }
-
-  .card-label {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    margin: 0 0 16px;
-  }
-
-  .campo {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .campo label {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  /* Header */
-  header {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-  }
-
-  header h1 {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 20px;
-    margin: 0;
-    color: var(--text-primary);
-  }
-
-  .guia-app {
-    font-family: var(--font-sans);
-    font-size: 15px;
-    color: var(--text-secondary);
-    margin: 0 0 20px;
-    padding: 0 4px;
-  }
-
-  .guia-tarea {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin: 0 0 16px;
-  }
-
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  .tab {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
-    border-radius: 6px;
-    padding: 10px 16px;
-    cursor: pointer;
-  }
-
-  .tab.activo {
-    color: var(--text-primary);
-    border-color: var(--accent);
-  }
-
-  /* Dashboard */
-  .dashboard-stats {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 24px;
-    flex: 1;
-    min-width: 130px;
-  }
-
-  .stat-card .valor {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 28px;
-    color: var(--text-primary);
-    display: block;
-    margin-bottom: 4px;
-  }
-
-  .stat-card .valor.con-vencidas {
-    color: var(--priority-alta);
-  }
-
-  .stat-card.tasa .valor {
-    color: var(--completed);
-  }
-
-  .stat-card .label {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .dashboard-graficos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .grafico-card {
-    grid-column: span 1;
-  }
-
-  .grafico-card.ancho-completo {
-    grid-column: span 2;
-  }
-
-  .grafico-contenedor {
-    position: relative;
-    height: 220px;
-  }
-
-  .grafico-vacio {
-    font-family: var(--font-sans);
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 60px 0;
-  }
-
-  .anillo-progreso-wrap {
-    position: relative;
-    height: 220px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .anillo-progreso-porcentaje {
-    position: absolute;
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 26px;
-    color: var(--text-primary);
-  }
-
-  @media (max-width: 720px) {
-    .dashboard-graficos {
-      grid-template-columns: 1fr;
-    }
-
-    .grafico-card.ancho-completo {
-      grid-column: span 1;
-    }
-  }
-
-  @keyframes parpadeo {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
-
-  #cursor {
-    animation: parpadeo 1s step-start infinite;
-  }
-
-  /* Formulario de nueva tarea */
-  .form-tarea {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-tarea input[type="text"],
-  .form-tarea input[type="date"] {
-    font-family: var(--font-mono);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-primary);
-    padding: 12px 14px;
-    width: 100%;
-  }
-
-  .form-tarea input#titulo {
-    height: 48px;
-    font-size: 15px;
-  }
-
-  .form-tarea input[type="text"]::placeholder {
-    color: var(--text-secondary);
-  }
-
-  .form-tarea input[type="text"]:focus,
-  .form-tarea input[type="date"]:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
-  }
-
-  .fila-fecha-prioridad {
-    display: flex;
-    gap: 16px;
-  }
-
-  .fila-fecha-prioridad .campo {
-    flex: 1;
-    min-width: 0;
-  }
-
-  select#prioridad,
-  select#orden,
-  .form-tarea input[type="date"] {
-    font-family: var(--font-mono);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-primary);
-    padding: 12px 14px;
-    width: 100%;
-  }
-
-  .form-tarea input[type="date"] {
-    color-scheme: dark;
-  }
-
-  .btn-agregar-detalles {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    background: none;
-    border: none;
-    color: var(--accent);
-    cursor: pointer;
-    text-align: left;
-    padding: 0;
-    align-self: flex-start;
-  }
-
-  .btn-agregar-detalles:hover {
-    text-decoration: underline;
-  }
-
-  .detalles-tarea {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    max-height: 300px;
-    opacity: 1;
-    overflow: hidden;
-    transition: max-height 0.25s ease, opacity 0.2s ease;
-  }
-
-  .detalles-tarea.oculto {
-    max-height: 0;
-    opacity: 0;
-  }
-
-  .btn-crear-tarea {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 15px;
-    background: var(--accent);
-    color: #FFFFFF;
-    border: none;
-    border-radius: 6px;
-    height: 44px;
-    width: 100%;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-
-  .btn-crear-tarea:hover {
-    background: #4A78D6;
-  }
-
-  .btn-crear-tarea:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .btn-crear-tarea:disabled:hover {
-    background: var(--accent);
-  }
-
-  /* Card Resumen */
-  .stats-numeros {
-    display: flex;
-    gap: 32px;
-    margin-bottom: 16px;
-  }
-
-  .stats-numeros .grupo {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .stats-numeros .valor {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 30px;
-    color: var(--text-primary);
-  }
-
-  .stats-numeros .vencidas .valor {
-    color: var(--text-secondary);
-  }
-
-  .stats-numeros .vencidas .valor.con-vencidas {
-    color: var(--priority-alta);
-  }
-
-  .stats-numeros .completadas .valor {
-    color: var(--completed);
-  }
-
-  .stats-numeros .label {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-  }
-
-  .progreso-fila {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-
-  .progreso-track {
-    flex: 1;
-    background: var(--border);
-    border-radius: 999px;
-    height: 10px;
-    overflow: hidden;
-  }
-
-  .progreso-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent), var(--completed));
-    transition: width 0.3s ease;
-    width: 0%;
-  }
-
-  .progreso-porcentaje {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-
-  .activity-log-titulo {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin: 0 0 10px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-  }
-
-  .activity-log {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .activity-log .vacio-log {
-    color: var(--text-secondary);
-    opacity: 0.6;
-    display: block;
-    padding: 8px 0;
-  }
-
-  /* Barra de filtros */
-  .filtros {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .filtros-buscar {
-    flex: 1;
-    min-width: 160px;
-  }
-
-  .filtros-controles {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .filtros input[type="text"] {
-    font-family: var(--font-mono);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-primary);
-    padding: 10px 12px;
-    width: 100%;
-  }
-
-  .filtros input[type="text"]::placeholder {
-    color: var(--text-secondary);
-  }
-
-  select#orden {
-    padding: 9px 10px;
-    font-size: 12px;
-  }
-
-  .chip {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    text-transform: uppercase;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    color: var(--text-secondary);
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-
-  .chip[data-prioridad="alta"].activo {
-    border-color: var(--priority-alta);
-    color: var(--priority-alta);
-  }
-
-  .chip[data-prioridad="media"].activo {
-    border-color: var(--priority-media);
-    color: var(--priority-media);
-  }
-
-  .chip[data-prioridad="baja"].activo {
-    border-color: var(--priority-baja);
-    color: var(--priority-baja);
-  }
-
-  /* Lista de tareas */
-  ul#lista-tareas {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  li.tarea {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    transition: opacity 0.25s ease, transform 0.25s ease;
-  }
-
-  li.tarea.saliendo {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-
-  .estado {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    color: var(--text-secondary);
-    width: 20px;
-    text-align: center;
-    padding: 0;
-  }
-
-  li.tarea.completada .estado {
-    color: var(--completed);
-  }
-
-  li.tarea {
-    flex-wrap: wrap;
-    cursor: pointer;
-  }
-
-  li.tarea .fila-principal {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    width: 100%;
-  }
-
-  .titulo {
-    font-family: var(--font-sans);
-    flex: 1;
-    transition: opacity 0.3s ease;
-  }
-
-  .vence {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-
-  .vence.vencida {
-    color: var(--priority-alta);
-  }
-
-  .contador-subtareas {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-secondary);
-    white-space: nowrap;
-  }
-
-  .checklist {
-    list-style: none;
-    margin: 0;
-    padding: 0 0 0 30px;
-    width: 100%;
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.2s ease, opacity 0.2s ease;
-  }
-
-  li.tarea.expandida .checklist {
-    max-height: 200px;
-    opacity: 1;
-  }
-
-  .checklist li {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-    padding: 4px 0;
-    cursor: pointer;
-  }
-
-  .checklist li.completada {
-    text-decoration: line-through;
-    opacity: 0.6;
-  }
-
-  li.tarea.completada .titulo {
-    text-decoration: line-through;
-    opacity: 0.5;
-  }
-
-  .badge-prioridad {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    font-size: 11px;
-    border-radius: 999px;
-    padding: 2px 10px;
-  }
-
-  .badge-prioridad[data-prioridad="alta"] {
-    background: rgba(240, 101, 75, 0.15);
-    color: var(--priority-alta);
-  }
-
-  .badge-prioridad[data-prioridad="media"] {
-    background: rgba(245, 184, 77, 0.15);
-    color: var(--priority-media);
-  }
-
-  .badge-prioridad[data-prioridad="baja"] {
-    background: rgba(107, 114, 128, 0.15);
-    color: var(--priority-baja);
-  }
-
-  .eliminar,
-  .editar {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 4px;
-    visibility: hidden;
-  }
-
-  li.tarea:hover .eliminar,
-  li.tarea:hover .editar {
-    visibility: visible;
-  }
-
-  .eliminar:hover {
-    color: var(--priority-alta);
-  }
-
-  .editar:hover {
-    color: var(--accent);
-  }
-
-  .titulo-input {
-    font-family: var(--font-sans);
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    color: var(--text-primary);
-    padding: 2px 6px;
-  }
-
-  /* Reporte */
-  .reporte {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-secondary);
-    border-top: 1px solid var(--border);
-    padding-top: 24px;
-    margin-top: 4px;
-  }
-
-  .reporte .completadas {
-    color: var(--completed);
-  }
-
-  .reporte .pendientes {
-    color: var(--text-secondary);
-  }
-
-  /* Estado vacío */
-  .vacio {
-    font-family: var(--font-sans);
-    font-size: 15px;
-    color: var(--text-secondary);
-    text-align: center;
-    padding: 32px 0;
-  }
-
-  /* Toasts */
-  .toasts {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 100;
-  }
-
-  .toast {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 6px;
-    padding: 10px 14px;
-    color: var(--text-primary);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    animation: toast-entrada 0.2s ease;
-  }
-
-  .toast.saliendo {
-    animation: toast-salida 0.2s ease forwards;
-  }
-
-  .toast[data-tipo="crear"] { border-left-color: var(--accent); }
-  .toast[data-tipo="completar"] { border-left-color: var(--completed); }
-  .toast[data-tipo="eliminar"] { border-left-color: var(--priority-alta); }
-
-  @keyframes toast-entrada {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes toast-salida {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-
-  @media (max-width: 480px) {
-    body {
-      padding: 16px 12px 40px;
-    }
-
-    .card {
-      padding: 20px;
-    }
-
-    .fila-fecha-prioridad {
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .filtros {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .filtros-controles {
-      flex-wrap: wrap;
-    }
-
-    .filtros-controles select#orden {
-      flex: 1;
-    }
-
-    .filtros .chip {
-      flex: 1;
-      text-align: center;
-    }
-
-    .stats-numeros {
-      gap: 20px;
-      flex-wrap: wrap;
-      row-gap: 12px;
-    }
-
-    li.tarea .fila-principal {
-      flex-wrap: wrap;
-      row-gap: 6px;
-    }
-
-    .toasts {
-      left: 12px;
-      right: 12px;
-      bottom: 12px;
-    }
-
-    .toast {
-      width: 100%;
-    }
-
-    .eliminar,
-    .editar {
-      visibility: visible;
-    }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor de Tareas</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23E2E8F0'/%3E%3Cpath d='M28 50h44M28 34h44M28 66h26' stroke='%231E3A8A' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/variables.css" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>gestor-tareas $ <span id="cursor">_</span></h1>
-  </header>
-
-  <p class="guia-app">Organiza tus pendientes: créalos, márcalos como completados y sigue tu progreso.</p>
-
-  <div class="tabs">
-    <button type="button" class="tab activo" id="tab-tareas" data-vista="tareas">Tareas</button>
-    <button type="button" class="tab" id="tab-dashboard" data-vista="dashboard">Dashboard</button>
-  </div>
-
-  <div id="vista-tareas">
-  <div class="card">
-    <p class="card-label">Nueva tarea</p>
-    <p class="guia-tarea">Crea una tarea para empezar</p>
-    <form class="form-tarea" id="form-tarea">
-      <div class="campo">
-        <label for="titulo">Título</label>
-        <input type="text" id="titulo" placeholder="¿Qué tienes que hacer?" required />
+  <div class="page-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Task workspace</p>
+        <h1>Gestor de Tareas</h1>
+        <p class="subtitle">Login, roles, tareas y analiticas en un mismo panel.</p>
       </div>
+      <div class="session-pill">
+        <span id="session-role">sesion cerrada</span>
+        <button type="button" class="ghost-button" id="logout-btn" hidden>Cerrar sesion</button>
+      </div>
+    </header>
 
-      <button type="button" class="btn-agregar-detalles" id="btn-agregar-detalles">+ Agregar detalles (fecha, prioridad, subtareas)</button>
+    <section id="auth-view" class="auth-stage">
+      <div class="auth-orb auth-orb-top"></div>
+      <div class="auth-orb auth-orb-bottom"></div>
 
-      <div class="detalles-tarea oculto" id="detalles-tarea">
-        <div class="campo">
-          <label for="descripcion">Descripción</label>
-          <input type="text" id="descripcion" placeholder="Agrega detalles (opcional)" />
+      <div id="auth-shell" class="auth-shell">
+        <div class="auth-slider">
+          <article class="surface-card auth-panel auth-panel-login">
+            <div class="auth-copy">
+              <p class="section-tag">Acceso seguro</p>
+              <h2>Sign in to Workspace</h2>
+              <p class="muted">Entra para revisar tareas, usuarios y analiticas en una sola pantalla.</p>
+              <button type="button" class="ghost-button auth-switch-btn" id="show-register">Registrarse</button>
+            </div>
+
+            <div class="auth-form-card">
+              <div class="auth-icons" aria-hidden="true">
+                <span>f</span>
+                <span>in</span>
+                <span>X</span>
+              </div>
+              <p class="auth-kicker">OR USE YOUR EMAIL ACCOUNT</p>
+              <form id="login-form" class="stack auth-form">
+                <label class="field auth-field">
+                  <span>Email</span>
+                  <input type="email" id="login-email" placeholder="admin@local" autocomplete="email" required />
+                </label>
+                <label class="field auth-field">
+                  <span>Password</span>
+                  <input type="password" id="login-password" placeholder="********" autocomplete="current-password" required />
+                </label>
+                <a href="#" class="auth-link">Forgot your password?</a>
+                <button class="primary-button auth-submit" type="submit">Iniciar sesión</button>
+                <p class="form-message" id="login-message" aria-live="polite"></p>
+              </form>
+            </div>
+          </article>
+
+          <article class="surface-card auth-panel auth-panel-register">
+            <div class="auth-copy auth-copy-register">
+              <p class="section-tag">Bienvenido</p>
+              <h2>Create Account</h2>
+              <p class="muted">Crea tu cuenta para empezar a gestionar tareas dentro del proyecto.</p>
+              <button type="button" class="ghost-button auth-switch-btn" id="show-login">Iniciar sesión</button>
+            </div>
+
+            <div class="auth-form-card">
+              <div class="auth-icons" aria-hidden="true">
+                <span>f</span>
+                <span>in</span>
+                <span>X</span>
+              </div>
+              <p class="auth-kicker">OR USE YOUR EMAIL ACCOUNT</p>
+              <form id="register-form" class="stack auth-form">
+                <label class="field auth-field">
+                  <span>Nombre</span>
+                  <input type="text" id="register-name" placeholder="Nombre completo" autocomplete="name" required />
+                </label>
+                <label class="field auth-field">
+                  <span>Email</span>
+                  <input type="email" id="register-email" placeholder="usuario@correo.com" autocomplete="email" required />
+                </label>
+                <label class="field auth-field">
+                  <span>Password</span>
+                  <input type="password" id="register-password" placeholder="Minimo 6 caracteres" autocomplete="new-password" required />
+                </label>
+                <button class="primary-button auth-submit" type="submit">Registrarse</button>
+                <p class="form-message" id="register-message" aria-live="polite"></p>
+              </form>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <main id="app-view" hidden>
+      <section class="surface-card app-hero">
+        <div>
+          <p class="section-tag">Sesion activa</p>
+          <h2 id="user-greeting">Bienvenido</h2>
+          <p class="muted" id="user-context">Puedes trabajar en tus tareas y revisar el tablero.</p>
+        </div>
+        <div class="toolbar">
+          <label class="field compact">
+            <span>Vista</span>
+            <select id="scope-user-select"></select>
+          </label>
+          <button type="button" class="ghost-button" id="refresh-btn">Actualizar</button>
+        </div>
+      </section>
+
+      <section id="admin-panel" class="surface-card admin-panel" hidden>
+        <div class="section-head">
+          <div>
+            <p class="section-tag">Administracion</p>
+            <h3>Usuarios</h3>
+          </div>
+          <span class="muted">Crear, deshabilitar o eliminar cuentas.</span>
         </div>
 
-        <div class="fila-fecha-prioridad">
-          <div class="campo">
-            <label for="fecha-limite">Fecha límite</label>
-            <input type="date" id="fecha-limite" aria-label="Fecha límite" />
+        <form id="user-form" class="admin-form">
+          <label class="field">
+            <span>Nombre</span>
+            <input type="text" id="user-name" required />
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="user-email" required />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input type="password" id="user-password" required />
+          </label>
+          <label class="field">
+            <span>Rol</span>
+            <select id="user-role">
+              <option value="user">user</option>
+              <option value="admin">admin</option>
+            </select>
+          </label>
+          <button class="primary-button" type="submit">Crear usuario</button>
+        </form>
+        <p class="form-message" id="user-message" aria-live="polite"></p>
+
+        <div class="table-wrap">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Tareas</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="grid-layout">
+        <article class="surface-card">
+          <div class="section-head">
+            <div>
+              <p class="section-tag">Tareas</p>
+              <h3>Crear tarea</h3>
+            </div>
           </div>
-          <div class="campo">
-            <label for="prioridad">Prioridad</label>
-            <select id="prioridad">
-              <option value="media">media</option>
-              <option value="alta">alta</option>
-              <option value="baja">baja</option>
+
+          <form id="task-form" class="stack">
+            <label class="field">
+              <span>Titulo</span>
+              <input type="text" id="task-title" placeholder="Que necesitas hacer?" required />
+            </label>
+
+            <label class="field">
+              <span>Descripcion</span>
+              <input type="text" id="task-description" placeholder="Detalles opcionales" />
+            </label>
+
+            <div class="details-panel" id="task-details">
+              <div class="two-columns">
+                <label class="field">
+                  <span>Fecha limite</span>
+                  <input type="date" id="task-date" />
+                </label>
+                <label class="field">
+                  <span>Prioridad</span>
+                  <select id="task-priority">
+                    <option value="media">media</option>
+                    <option value="alta">alta</option>
+                    <option value="baja">baja</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="field">
+                <span>Subtareas</span>
+                <input type="text" id="task-subtasks" placeholder="Uno, dos, tres" />
+              </label>
+            </div>
+
+            <button class="primary-button" type="submit">Crear tarea</button>
+            <p class="form-message" id="task-message" aria-live="polite"></p>
+          </form>
+        </article>
+
+        <article class="surface-card">
+          <div class="section-head">
+            <div>
+              <p class="section-tag">Filtros</p>
+              <h3>Explorar tareas</h3>
+            </div>
+            <select id="task-order" class="compact-select">
+              <option value="reciente">mas reciente</option>
+              <option value="prioridad">prioridad</option>
+              <option value="fecha_limite">fecha limite</option>
             </select>
           </div>
-        </div>
 
-        <div class="campo">
-          <label for="subtareas">Subtareas</label>
-          <input type="text" id="subtareas" placeholder="Ej: escribir, revisar, enviar" />
-        </div>
-      </div>
+          <label class="field search-field">
+            <span>Buscar</span>
+            <input type="text" id="task-search" placeholder="Buscar por titulo" />
+          </label>
 
-      <button type="submit" class="btn-crear-tarea" id="btn-crear-tarea" disabled>Crear tarea</button>
-    </form>
-  </div>
-
-  <div class="card">
-    <p class="card-label">Resumen</p>
-
-    <div class="stats-numeros">
-      <span class="grupo total"><span class="valor" id="stat-total">0</span><span class="label">Total</span></span>
-      <span class="grupo completadas"><span class="valor" id="stat-completadas">0</span><span class="label">Completadas</span></span>
-      <span class="grupo vencidas"><span class="valor" id="stat-vencidas">0</span><span class="label">Vencidas</span></span>
-    </div>
-
-    <div class="progreso-fila">
-      <div class="progreso-track">
-        <div class="progreso-fill" id="progreso-fill"></div>
-      </div>
-      <span class="progreso-porcentaje" id="progreso-porcentaje">0%</span>
-    </div>
-
-    <p class="activity-log-titulo">Actividad reciente</p>
-    <div class="activity-log" id="activity-log">
-      <span class="vacio-log">Aquí verás tus últimas acciones</span>
-    </div>
-  </div>
-
-  <div class="filtros">
-    <div class="filtros-buscar">
-      <input type="text" id="buscar" placeholder="Buscar tarea..." />
-    </div>
-    <div class="filtros-controles">
-      <select id="orden">
-        <option value="reciente">más reciente</option>
-        <option value="prioridad">prioridad</option>
-        <option value="fecha_limite">fecha límite</option>
-      </select>
-      <button type="button" class="chip" data-prioridad="alta">Alta</button>
-      <button type="button" class="chip" data-prioridad="media">Media</button>
-      <button type="button" class="chip" data-prioridad="baja">Baja</button>
-    </div>
-  </div>
-
-  <ul id="lista-tareas"></ul>
-
-  <p class="vacio" id="estado-vacio" hidden>Aún no tienes tareas. Escribe la primera arriba y presiona "Crear tarea".</p>
-
-  <div class="reporte">
-    ── reporte ──────────────────────<br />
-    <span class="completadas" id="reporte-completadas">✓ 0 completadas</span>
-    &nbsp;&nbsp;&nbsp;
-    <span class="pendientes" id="reporte-pendientes">○ 0 pendientes</span>
-  </div>
-  </div>
-
-  <div id="vista-dashboard" hidden>
-    <div class="dashboard-stats">
-      <div class="stat-card tasa">
-        <span class="valor" id="dash-tasa">0%</span>
-        <span class="label">Tasa de completado</span>
-      </div>
-      <div class="stat-card">
-        <span class="valor" id="dash-racha">0</span>
-        <span class="label">Racha actual (días)</span>
-      </div>
-      <div class="stat-card">
-        <span class="valor" id="dash-vencidas">0</span>
-        <span class="label">Tareas vencidas</span>
-      </div>
-      <div class="stat-card">
-        <span class="valor" id="dash-tiempo">—</span>
-        <span class="label">Tiempo promedio</span>
-      </div>
-    </div>
-
-    <div class="dashboard-graficos">
-      <div class="card grafico-card ancho-completo">
-        <p class="card-label">Tareas completadas — últimos 7 días</p>
-        <div class="grafico-contenedor">
-          <canvas id="grafico-por-dia"></canvas>
-          <p class="grafico-vacio" id="grafico-por-dia-vacio" hidden>Aún no hay datos para mostrar</p>
-        </div>
-      </div>
-
-      <div class="card grafico-card">
-        <p class="card-label">Distribución por prioridad</p>
-        <div class="grafico-contenedor">
-          <canvas id="grafico-prioridad"></canvas>
-          <p class="grafico-vacio" id="grafico-prioridad-vacio" hidden>Aún no hay datos para mostrar</p>
-        </div>
-      </div>
-
-      <div class="card grafico-card">
-        <p class="card-label">Progreso general</p>
-        <div class="anillo-progreso-wrap">
-          <canvas id="grafico-progreso"></canvas>
-          <span class="anillo-progreso-porcentaje" id="anillo-progreso-porcentaje">0%</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="toasts" id="toasts"></div>
-
-  <script>
-    const lista = document.getElementById('lista-tareas');
-    const form = document.getElementById('form-tarea');
-    const buscarInput = document.getElementById('buscar');
-    const estadoVacio = document.getElementById('estado-vacio');
-    const chips = document.querySelectorAll('.chip');
-    const reporteCompletadas = document.getElementById('reporte-completadas');
-    const reportePendientes = document.getElementById('reporte-pendientes');
-    const statTotal = document.getElementById('stat-total');
-    const statCompletadas = document.getElementById('stat-completadas');
-    const statVencidas = document.getElementById('stat-vencidas');
-    const progresoFill = document.getElementById('progreso-fill');
-    const progresoPorcentaje = document.getElementById('progreso-porcentaje');
-    const activityLog = document.getElementById('activity-log');
-
-    const actividades = [];
-
-    function registrarActividad(verbo, titulo) {
-      actividades.unshift({ verbo, titulo, momento: Date.now() });
-      actividades.length = Math.min(actividades.length, 4);
-      renderizarActividad();
-    }
-
-    function tiempoRelativo(momento) {
-      const minutos = Math.max(0, Math.floor((Date.now() - momento) / 60000));
-      if (minutos < 1) return 'justo ahora';
-      return `hace ${minutos}m`;
-    }
-
-    function renderizarActividad() {
-      if (actividades.length === 0) {
-        activityLog.innerHTML = '<span class="vacio-log">Aquí verás tus últimas acciones</span>';
-        return;
-      }
-      activityLog.innerHTML = actividades
-        .map((a) => `<span>$ ${a.verbo} "${a.titulo}" — ${tiempoRelativo(a.momento)}</span>`)
-        .join('');
-    }
-
-    setInterval(renderizarActividad, 30000);
-
-    const toastsContenedor = document.getElementById('toasts');
-    const ICONOS_TOAST = { crear: '$', completar: '✓', eliminar: '✕' };
-
-    function mostrarToast(tipo, mensaje) {
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.dataset.tipo = tipo;
-      toast.textContent = `${ICONOS_TOAST[tipo]} ${mensaje}`;
-      toastsContenedor.appendChild(toast);
-
-      setTimeout(() => {
-        toast.classList.add('saliendo');
-        setTimeout(() => toast.remove(), 200);
-      }, 3000);
-    }
-
-    let prioridadActiva = null;
-    const ordenSelect = document.getElementById('orden');
-    const PESO_PRIORIDAD = { alta: 0, media: 1, baja: 2 };
-    const expandidas = new Set();
-
-    function formatearFecha(fechaIso) {
-      const [anio, mes, dia] = fechaIso.split('-');
-      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-      return `${Number(dia)} ${meses[Number(mes) - 1]}`;
-    }
-
-    function ordenarTareas(tareas) {
-      const orden = ordenSelect.value;
-      const copia = [...tareas];
-
-      if (orden === 'prioridad') {
-        copia.sort((a, b) => PESO_PRIORIDAD[a.prioridad] - PESO_PRIORIDAD[b.prioridad]);
-      } else if (orden === 'fecha_limite') {
-        copia.sort((a, b) => {
-          if (!a.fecha_limite) return 1;
-          if (!b.fecha_limite) return -1;
-          return a.fecha_limite.localeCompare(b.fecha_limite);
-        });
-      }
-
-      return copia;
-    }
-
-    async function cargarTareas() {
-      const query = buscarInput.value;
-      const url = query ? `/api/tareas?buscar=${encodeURIComponent(query)}` : '/api/tareas';
-      const res = await fetch(url);
-      let tareas = await res.json();
-
-      if (prioridadActiva) {
-        tareas = tareas.filter((tarea) => tarea.prioridad === prioridadActiva);
-      }
-
-      tareas = ordenarTareas(tareas);
-
-      lista.innerHTML = '';
-      estadoVacio.hidden = tareas.length > 0;
-
-      const hoy = new Date().toISOString().slice(0, 10);
-
-      tareas.forEach((tarea) => {
-        const li = document.createElement('li');
-        li.className = 'tarea';
-        li.dataset.id = tarea.id;
-        if (tarea.completada) li.classList.add('completada');
-        if (expandidas.has(String(tarea.id))) li.classList.add('expandida');
-
-        const subtareas = tarea.subtareas || [];
-        const vencida = tarea.fecha_limite && tarea.fecha_limite < hoy && !tarea.completada;
-
-        const venceHtml = tarea.fecha_limite
-          ? `<span class="vence ${vencida ? 'vencida' : ''}">vence: ${formatearFecha(tarea.fecha_limite)}</span>`
-          : '';
-
-        const totalSubtareas = subtareas.length;
-        const completadasSubtareas = subtareas.filter((s) => s.completada).length;
-        const contadorHtml = totalSubtareas > 0
-          ? `<span class="contador-subtareas" title="${completadasSubtareas} de ${totalSubtareas} completadas">${completadasSubtareas}/${totalSubtareas}</span>`
-          : '';
-
-        const checklistHtml = subtareas.length > 0
-          ? `<ul class="checklist">${subtareas
-              .map((s, i) => `<li class="${s.completada ? 'completada' : ''}" data-index="${i}">${s.completada ? '✓' : '○'} ${s.texto}</li>`)
-              .join('')}</ul>`
-          : '';
-
-        const prioridad = tarea.prioridad || 'media';
-        const prioridadCapitalizada = prioridad.charAt(0).toUpperCase() + prioridad.slice(1);
-
-        li.innerHTML = `
-          <div class="fila-principal">
-            <button class="estado" data-id="${tarea.id}" aria-label="Cambiar estado">${tarea.completada ? '✓' : '○'}</button>
-            <span class="titulo">${tarea.titulo}</span>
-            ${venceHtml}
-            <span class="badge-prioridad" data-prioridad="${prioridad}" title="Prioridad: ${prioridadCapitalizada}">${prioridad}</span>
-            ${contadorHtml}
-            <button class="editar" data-id="${tarea.id}" aria-label="Editar título">✎</button>
-            <button class="eliminar" data-id="${tarea.id}" aria-label="Eliminar tarea">✕</button>
+          <div class="chip-row">
+            <button type="button" class="chip" data-priority="">Todas</button>
+            <button type="button" class="chip" data-priority="alta">Alta</button>
+            <button type="button" class="chip" data-priority="media">Media</button>
+            <button type="button" class="chip" data-priority="baja">Baja</button>
           </div>
-          ${checklistHtml}
-        `;
-        lista.appendChild(li);
-      });
-    }
 
-    async function cargarReporte() {
-      const res = await fetch('/api/tareas/reporte');
-      const { completadas, pendientes, vencidas } = await res.json();
-      reporteCompletadas.textContent = `✓ ${completadas} completadas`;
-      reportePendientes.textContent = `○ ${pendientes} pendientes`;
+          <div class="task-stats">
+            <div><strong id="stat-total">0</strong><span>Total</span></div>
+            <div><strong id="stat-completed">0</strong><span>Completadas</span></div>
+            <div><strong id="stat-overdue">0</strong><span>Vencidas</span></div>
+          </div>
 
-      const total = completadas + pendientes;
-      const porcentaje = total > 0 ? Math.round((completadas / total) * 100) : 0;
-      statTotal.textContent = total;
-      statCompletadas.textContent = completadas;
-      statVencidas.textContent = vencidas;
-      statVencidas.classList.toggle('con-vencidas', vencidas > 0);
-      progresoFill.style.width = `${porcentaje}%`;
-      progresoPorcentaje.textContent = `${porcentaje}%`;
-    }
+          <div class="progress-line">
+            <div class="progress-track">
+              <div class="progress-fill" id="task-progress-fill"></div>
+            </div>
+            <span id="task-progress-label">0%</span>
+          </div>
 
-    async function refrescar() {
-      await cargarTareas();
-      await cargarReporte();
-    }
+          <p class="section-tag">Actividad reciente</p>
+          <div class="activity-log" id="activity-log"></div>
+        </article>
+      </section>
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const titulo = document.getElementById('titulo').value;
-      const descripcion = document.getElementById('descripcion').value;
-      const prioridad = document.getElementById('prioridad').value;
-      const fechaLimite = document.getElementById('fecha-limite').value;
-      const subtareasTexto = document.getElementById('subtareas').value;
-      const subtareas = subtareasTexto
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((texto) => ({ texto, completada: false }));
+      <section class="surface-card">
+        <div class="section-head">
+          <div>
+            <p class="section-tag">Listado</p>
+            <h3>Tareas</h3>
+          </div>
+          <span class="muted" id="task-scope-label">Vista personal</span>
+        </div>
+        <div id="task-empty" class="empty-state" hidden>No hay tareas para mostrar.</div>
+        <ul id="task-list" class="task-list"></ul>
+      </section>
 
-      await fetch('/api/tareas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          titulo,
-          descripcion,
-          prioridad,
-          fecha_limite: fechaLimite || undefined,
-          subtareas,
-        }),
-      });
-      registrarActividad('creaste', titulo);
-      mostrarToast('crear', `Creaste "${titulo}"`);
-      form.reset();
-      detallesTarea.classList.add('oculto');
-      btnAgregarDetalles.textContent = '+ Agregar detalles (fecha, prioridad, subtareas)';
-      btnCrearTarea.disabled = true;
-      refrescar();
-    });
+      <section class="surface-card">
+        <div class="section-head">
+          <div>
+            <p class="section-tag">Dashboard</p>
+            <h3>Analiticas</h3>
+          </div>
+          <span class="muted" id="dashboard-scope-label">Vista personal</span>
+        </div>
 
-    lista.addEventListener('click', async (e) => {
-      const itemChecklist = e.target.closest('.checklist li');
-      if (itemChecklist) {
-        const id = itemChecklist.closest('li.tarea').dataset.id;
-        const index = itemChecklist.dataset.index;
-        await fetch(`/api/tareas/${id}/subtareas/${index}`, { method: 'PATCH' });
-        refrescar();
-        return;
-      }
+        <div class="metrics-grid">
+          <div class="metric-card"><span id="dash-total">0</span><small>Total</small></div>
+          <div class="metric-card"><span id="dash-completed">0</span><small>Completadas</small></div>
+          <div class="metric-card"><span id="dash-pending">0</span><small>Pendientes</small></div>
+          <div class="metric-card"><span id="dash-overdue">0</span><small>Vencidas</small></div>
+          <div class="metric-card"><span id="dash-rate">0%</span><small>Tasa</small></div>
+          <div class="metric-card"><span id="dash-streak">0</span><small>Racha</small></div>
+        </div>
 
-      if (e.target.classList.contains('estado')) {
-        const id = e.target.dataset.id;
-        const completar = e.target.textContent.trim() !== '✓';
-        const titulo = e.target.closest('li.tarea').querySelector('.titulo').textContent;
-        await fetch(`/api/tareas/${id}/completar`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ completada: completar }),
-        });
-        if (completar) {
-          registrarActividad('completaste', titulo);
-          mostrarToast('completar', `Completaste "${titulo}"`);
-        }
-        refrescar();
-      }
+        <div class="chart-grid">
+          <article class="chart-card">
+            <p class="section-tag">Completadas por dia</p>
+            <canvas id="chart-day"></canvas>
+          </article>
+          <article class="chart-card">
+            <p class="section-tag">Prioridad</p>
+            <canvas id="chart-priority"></canvas>
+          </article>
+          <article class="chart-card chart-wide">
+            <p class="section-tag">Progreso general</p>
+            <div class="progress-ring">
+              <canvas id="chart-progress"></canvas>
+              <span id="progress-ring-label">0%</span>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
 
-      if (e.target.classList.contains('eliminar')) {
-        const id = e.target.dataset.id;
-        const li = e.target.closest('li.tarea');
-        const titulo = li.querySelector('.titulo').textContent;
-        li.classList.add('saliendo');
-        setTimeout(async () => {
-          await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
-          registrarActividad('eliminaste', titulo);
-          mostrarToast('eliminar', `Eliminaste "${titulo}"`);
-          refrescar();
-        }, 250);
-      }
-
-      if (e.target.classList.contains('editar')) {
-        const id = e.target.dataset.id;
-        const li = e.target.closest('li.tarea');
-        const span = li.querySelector('.titulo');
-        const tituloActual = span.textContent;
-
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'titulo-input';
-        input.value = tituloActual;
-        span.replaceWith(input);
-        input.focus();
-        input.select();
-
-        const guardar = async () => {
-          const nuevoTitulo = input.value.trim();
-          if (nuevoTitulo && nuevoTitulo !== tituloActual) {
-            await fetch(`/api/tareas/${id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ titulo: nuevoTitulo }),
-            });
-          }
-          refrescar();
-        };
-
-        input.addEventListener('blur', guardar);
-        input.addEventListener('keydown', (ev) => {
-          if (ev.key === 'Enter') input.blur();
-          if (ev.key === 'Escape') {
-            input.removeEventListener('blur', guardar);
-            refrescar();
-          }
-        });
-      }
-
-      if (!e.target.closest('button') && !e.target.closest('.titulo-input')) {
-        const li = e.target.closest('li.tarea');
-        if (li) {
-          li.classList.toggle('expandida');
-          if (li.classList.contains('expandida')) {
-            expandidas.add(li.dataset.id);
-          } else {
-            expandidas.delete(li.dataset.id);
-          }
-        }
-      }
-    });
-
-    const btnAgregarDetalles = document.getElementById('btn-agregar-detalles');
-    const detallesTarea = document.getElementById('detalles-tarea');
-
-    btnAgregarDetalles.addEventListener('click', () => {
-      const abierto = detallesTarea.classList.toggle('oculto') === false;
-      btnAgregarDetalles.textContent = abierto
-        ? '– Ocultar detalles'
-        : '+ Agregar detalles (fecha, prioridad, subtareas)';
-    });
-
-    const tituloInput = document.getElementById('titulo');
-    const btnCrearTarea = document.getElementById('btn-crear-tarea');
-
-    tituloInput.addEventListener('input', () => {
-      btnCrearTarea.disabled = tituloInput.value.trim().length === 0;
-    });
-
-    buscarInput.addEventListener('input', refrescar);
-    ordenSelect.addEventListener('change', cargarTareas);
-
-    chips.forEach((chip) => {
-      chip.addEventListener('click', () => {
-        const valor = chip.dataset.prioridad;
-        if (prioridadActiva === valor) {
-          prioridadActiva = null;
-          chip.classList.remove('activo');
-        } else {
-          prioridadActiva = valor;
-          chips.forEach((c) => c.classList.remove('activo'));
-          chip.classList.add('activo');
-        }
-        cargarTareas();
-      });
-    });
-
-    document.addEventListener('keydown', (e) => {
-      const enCampoDeTexto = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
-
-      if (e.key === '/' && !enCampoDeTexto) {
-        e.preventDefault();
-        buscarInput.focus();
-      }
-
-      if (e.key === 'Escape') {
-        buscarInput.value = '';
-        prioridadActiva = null;
-        chips.forEach((c) => c.classList.remove('activo'));
-        buscarInput.blur();
-        cargarTareas();
-      }
-    });
-
-    // Dashboard
-    const tabs = document.querySelectorAll('.tab');
-    const vistaTareas = document.getElementById('vista-tareas');
-    const vistaDashboard = document.getElementById('vista-dashboard');
-
-    function colorVar(nombre) {
-      return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
-    }
-
-    const DIAS_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-    let chartPorDia = null;
-    let chartPrioridad = null;
-    let chartProgreso = null;
-
-    function renderGraficoPorDia(datos) {
-      const canvas = document.getElementById('grafico-por-dia');
-      const vacio = document.getElementById('grafico-por-dia-vacio');
-      const hayDatos = datos.some((d) => d.completadas > 0);
-      canvas.hidden = !hayDatos;
-      vacio.hidden = hayDatos;
-      if (chartPorDia) {
-        chartPorDia.destroy();
-        chartPorDia = null;
-      }
-      if (!hayDatos) return;
-
-      const labels = datos.map((d) => DIAS_SEMANA[new Date(`${d.fecha}T00:00:00`).getDay()]);
-
-      chartPorDia = new Chart(canvas, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Completadas',
-            data: datos.map((d) => d.completadas),
-            backgroundColor: colorVar('--accent'),
-            borderRadius: 4,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { color: colorVar('--text-secondary') }, grid: { display: false } },
-            y: {
-              beginAtZero: true,
-              ticks: { color: colorVar('--text-secondary'), stepSize: 1 },
-              grid: { color: colorVar('--border') },
-            },
-          },
-        },
-      });
-    }
-
-    function renderGraficoPrioridad(datos) {
-      const canvas = document.getElementById('grafico-prioridad');
-      const vacio = document.getElementById('grafico-prioridad-vacio');
-      const hayDatos = datos.some((d) => d.cantidad > 0);
-      canvas.hidden = !hayDatos;
-      vacio.hidden = hayDatos;
-      if (chartPrioridad) {
-        chartPrioridad.destroy();
-        chartPrioridad = null;
-      }
-      if (!hayDatos) return;
-
-      const coloresPorPrioridad = {
-        alta: colorVar('--priority-alta'),
-        media: colorVar('--priority-media'),
-        baja: colorVar('--priority-baja'),
-      };
-
-      chartPrioridad = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: datos.map((d) => d.prioridad.charAt(0).toUpperCase() + d.prioridad.slice(1)),
-          datasets: [{
-            data: datos.map((d) => d.cantidad),
-            backgroundColor: datos.map((d) => coloresPorPrioridad[d.prioridad]),
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: colorVar('--text-secondary') } },
-          },
-        },
-      });
-    }
-
-    function renderGraficoProgreso(resumen) {
-      const canvas = document.getElementById('grafico-progreso');
-      document.getElementById('anillo-progreso-porcentaje').textContent = `${resumen.tasaCompletado}%`;
-
-      if (chartProgreso) {
-        chartProgreso.destroy();
-        chartProgreso = null;
-      }
-
-      const hayDatos = resumen.total > 0;
-      chartProgreso = new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          datasets: [{
-            data: hayDatos ? [resumen.completadas, resumen.pendientes] : [1],
-            backgroundColor: hayDatos ? [colorVar('--completed'), colorVar('--border')] : [colorVar('--border')],
-            borderWidth: 0,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '75%',
-          plugins: { legend: { display: false }, tooltip: { enabled: hayDatos } },
-        },
-      });
-    }
-
-    async function cargarDashboard() {
-      const [resumen, porDia, porPrioridad, racha] = await Promise.all([
-        fetch('/api/analytics/resumen').then((r) => r.json()),
-        fetch('/api/analytics/por-dia').then((r) => r.json()),
-        fetch('/api/analytics/por-prioridad').then((r) => r.json()),
-        fetch('/api/analytics/racha').then((r) => r.json()),
-      ]);
-
-      document.getElementById('dash-tasa').textContent = `${resumen.tasaCompletado}%`;
-      document.getElementById('dash-racha').textContent = `${racha.racha}`;
-
-      const dashVencidas = document.getElementById('dash-vencidas');
-      dashVencidas.textContent = resumen.vencidas;
-      dashVencidas.classList.toggle('con-vencidas', resumen.vencidas > 0);
-
-      document.getElementById('dash-tiempo').textContent = resumen.tiempoPromedioHoras !== null
-        ? `${resumen.tiempoPromedioHoras} h`
-        : '—';
-
-      renderGraficoPorDia(porDia);
-      renderGraficoPrioridad(porPrioridad);
-      renderGraficoProgreso(resumen);
-    }
-
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        tabs.forEach((t) => t.classList.remove('activo'));
-        tab.classList.add('activo');
-        const esTareas = tab.dataset.vista === 'tareas';
-        vistaTareas.hidden = !esTareas;
-        vistaDashboard.hidden = esTareas;
-        if (!esTareas) cargarDashboard();
-      });
-    });
-
-    refrescar();
-  </script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>
