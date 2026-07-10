@@ -204,42 +204,56 @@
     background: #4A78D6;
   }
 
-  /* Panel de stats */
-  .stats {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-  }
-
+  /* Card Resumen */
   .stats-numeros {
     display: flex;
-    gap: 20px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    margin-bottom: 10px;
+    gap: 32px;
+    margin-bottom: 16px;
+  }
+
+  .stats-numeros .grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .stats-numeros .valor {
+    font-family: var(--font-mono);
     font-weight: 600;
-    font-size: 15px;
-    display: block;
+    font-size: 30px;
     color: var(--text-primary);
   }
 
   .stats-numeros .vencidas .valor {
-    color: var(--priority-alta);
-  }
-
-  .stats-numeros .label {
     color: var(--text-secondary);
   }
 
+  .stats-numeros .vencidas .valor.con-vencidas {
+    color: var(--priority-alta);
+  }
+
+  .stats-numeros .completadas .valor {
+    color: var(--completed);
+  }
+
+  .stats-numeros .label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .progreso-fila {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
   .progreso-track {
+    flex: 1;
     background: var(--border);
     border-radius: 999px;
-    height: 6px;
+    height: 10px;
     overflow: hidden;
   }
 
@@ -251,21 +265,36 @@
     width: 0%;
   }
 
+  .progreso-porcentaje {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .activity-log-titulo {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
   .activity-log {
     font-family: var(--font-mono);
     font-size: 12px;
     color: var(--text-secondary);
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   .activity-log .vacio-log {
     color: var(--text-secondary);
     opacity: 0.6;
+    display: block;
+    padding: 8px 0;
   }
 
   /* Barra de filtros */
@@ -645,15 +674,23 @@
     </form>
   </div>
 
-  <div class="stats">
+  <div class="card">
+    <p class="card-label">Resumen</p>
+
     <div class="stats-numeros">
-      <span class="total"><span class="valor" id="stat-total">0</span><span class="label">total</span></span>
-      <span class="completadas"><span class="valor" id="stat-completadas">0</span><span class="label">completadas</span></span>
-      <span class="vencidas"><span class="valor" id="stat-vencidas">0</span><span class="label">vencidas</span></span>
+      <span class="grupo total"><span class="valor" id="stat-total">0</span><span class="label">Total</span></span>
+      <span class="grupo completadas"><span class="valor" id="stat-completadas">0</span><span class="label">Completadas</span></span>
+      <span class="grupo vencidas"><span class="valor" id="stat-vencidas">0</span><span class="label">Vencidas</span></span>
     </div>
-    <div class="progreso-track">
-      <div class="progreso-fill" id="progreso-fill"></div>
+
+    <div class="progreso-fila">
+      <div class="progreso-track">
+        <div class="progreso-fill" id="progreso-fill"></div>
+      </div>
+      <span class="progreso-porcentaje" id="progreso-porcentaje">0%</span>
     </div>
+
+    <p class="activity-log-titulo">Actividad reciente</p>
     <div class="activity-log" id="activity-log">
       <span class="vacio-log">$ sin actividad reciente</span>
     </div>
@@ -696,6 +733,7 @@
     const statCompletadas = document.getElementById('stat-completadas');
     const statVencidas = document.getElementById('stat-vencidas');
     const progresoFill = document.getElementById('progreso-fill');
+    const progresoPorcentaje = document.getElementById('progreso-porcentaje');
     const activityLog = document.getElementById('activity-log');
 
     const actividades = [];
@@ -832,10 +870,13 @@
       reportePendientes.textContent = `○ ${pendientes} pendientes`;
 
       const total = completadas + pendientes;
+      const porcentaje = total > 0 ? Math.round((completadas / total) * 100) : 0;
       statTotal.textContent = total;
       statCompletadas.textContent = completadas;
       statVencidas.textContent = vencidas;
-      progresoFill.style.width = total > 0 ? `${Math.round((completadas / total) * 100)}%` : '0%';
+      statVencidas.classList.toggle('con-vencidas', vencidas > 0);
+      progresoFill.style.width = `${porcentaje}%`;
+      progresoPorcentaje.textContent = `${porcentaje}%`;
     }
 
     async function refrescar() {
