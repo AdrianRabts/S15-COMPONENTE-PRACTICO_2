@@ -24,9 +24,10 @@ function marcarCompletada(id, completada) {
 }
 
 function buscarPorTitulo(texto) {
+  const textoEscapado = texto.replace(/[%_]/g, '\\$&');
   return db
-    .prepare('SELECT * FROM tareas WHERE titulo LIKE ? ORDER BY id DESC')
-    .all(`%${texto}%`);
+    .prepare("SELECT * FROM tareas WHERE titulo LIKE ? ESCAPE '\\' ORDER BY id DESC")
+    .all(`%${textoEscapado}%`);
 }
 
 function contarPorEstado() {
