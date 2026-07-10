@@ -87,4 +87,44 @@ describe('API de tareas', () => {
     const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea rara', prioridad: 'urgentisima' });
     expect(res.status).toBe(400);
   });
+
+  test('POST /api/tareas acepta fecha_limite y subtareas opcionales', async () => {
+    const res = await request(app).post('/api/tareas').send({
+      titulo: 'Tarea con checklist',
+      fecha_limite: '2026-08-01',
+      subtareas: [{ texto: 'paso 1', completada: false }],
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.fecha_limite).toBe('2026-08-01');
+    expect(res.body.subtareas).toEqual([{ texto: 'paso 1', completada: false }]);
+  });
+
+  test('PATCH /api/tareas/:id/subtareas/:index togglea una subtarea puntual', async () => {
+    const creada = await request(app).post('/api/tareas').send({
+      titulo: 'Tarea con checklist 2',
+      subtareas: [{ texto: 'paso 1', completada: false }],
+    });
+
+    const res = await request(app).patch(`/api/tareas/${creada.body.id}/subtareas/0`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.subtareas[0].completada).toBe(true);
+  });
+
+  test('PATCH /api/tareas/:id edita el título de una tarea', async () => {
+    const creada = await request(app).post('/api/tareas').send({ titulo: 'Título original' });
+    const res = await request(app).patch(`/api/tareas/${creada.body.id}`).send({ titulo: 'Título editado' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.titulo).toBe('Título editado');
+  });
+
+  test('GET /api/tareas/reporte incluye tareas vencidas', async () => {
+    await request(app).post('/api/tareas').send({ titulo: 'Tarea vencida', fecha_limite: '2000-01-01' });
+    const res = await request(app).get('/api/tareas/reporte');
+
+    expect(res.status).toBe(200);
+    expect(res.body.vencidas).toBeGreaterThanOrEqual(1);
+  });
 });
