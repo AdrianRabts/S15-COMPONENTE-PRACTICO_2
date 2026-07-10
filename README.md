@@ -1,5 +1,7 @@
 # Gestor de Tareas
 
+![CI](https://github.com/OWNER/gestor-tareas/actions/workflows/ci.yml/badge.svg)
+
 Aplicación simple de gestión de tareas (To-Do List) construida con Node.js, Express y SQLite.
 
 Proyecto final de la materia "Gestión de la Configuración de Software". Grupo: Joel, Joseph, Josue y Alan.
