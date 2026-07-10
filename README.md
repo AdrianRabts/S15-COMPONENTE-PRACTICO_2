@@ -18,3 +18,7 @@ La app corre por defecto en `http://localhost:3000`.
 ```bash
 npm test
 ```
+
+## Integración Continua
+
+Cada `push` y `pull request` a `main` dispara el workflow definido en `.github/workflows/ci.yml`, que instala dependencias, corre el linter (ESLint) y ejecuta los tests (Jest).
