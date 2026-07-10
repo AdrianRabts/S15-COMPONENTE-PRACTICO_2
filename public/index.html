@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Gestor de Tareas</title>
+<style>
+  body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+  h1 { color: #222; }
+  form { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  input[type=text] { flex: 1; padding: 8px; min-width: 150px; }
+  select { padding: 8px; }
+  button { padding: 8px 16px; cursor: pointer; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid #eee; }
+  li.completada span.titulo { text-decoration: line-through; color: #888; }
+  .badge { font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eee; }
+  .eliminar { margin-left: auto; color: #c00; }
+</style>
+</head>
+<body>
+  <h1>Gestor de Tareas</h1>
+  <form id="form-tarea">
+    <input type="text" id="titulo" placeholder="Titulo de la tarea" required />
+    <input type="text" id="descripcion" placeholder="Descripcion (opcional)" />
+    <button type="submit">Agregar</button>
+  </form>
+  <input type="text" id="buscar" placeholder="Buscar por titulo..." />
+  <ul id="lista-tareas"></ul>
+
+  <script>
+    const lista = document.getElementById('lista-tareas');
+    const form = document.getElementById('form-tarea');
+    const buscarInput = document.getElementById('buscar');
+
+    async function cargarTareas(query) {
+      const url = query ? `/api/tareas?buscar=${encodeURIComponent(query)}` : '/api/tareas';
+      const res = await fetch(url);
+      const tareas = await res.json();
+      lista.innerHTML = '';
+      tareas.forEach((tarea) => {
+        const li = document.createElement('li');
+        if (tarea.completada) li.classList.add('completada');
+        li.innerHTML = `
+          <input type="checkbox" ${tarea.completada ? 'checked' : ''} data-id="${tarea.id}" class="check" />
+          <span class="titulo">${tarea.titulo}</span>
+          ${tarea.prioridad ? `<span class="badge">${tarea.prioridad}</span>` : ''}
+          <button class="eliminar" data-id="${tarea.id}">Eliminar</button>
+        `;
+        lista.appendChild(li);
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById('titulo').value;
+      const descripcion = document.getElementById('descripcion').value;
+      await fetch('/api/tareas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ titulo, descripcion }),
+      });
+      form.reset();
+      cargarTareas();
+    });
+
+    lista.addEventListener('change', async (e) => {
+      if (e.target.classList.contains('check')) {
+        const id = e.target.dataset.id;
+        await fetch(`/api/tareas/${id}/completar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completada: e.target.checked }),
+        });
+        cargarTareas(buscarInput.value);
+      }
+    });
+
+    lista.addEventListener('click', async (e) => {
+      if (e.target.classList.contains('eliminar')) {
+        const id = e.target.dataset.id;
+        await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
+        cargarTareas(buscarInput.value);
+      }
+    });
+
+    buscarInput.addEventListener('input', () => cargarTareas(buscarInput.value));
+
+    cargarTareas();
+  </script>
+</body>
+</html>
