@@ -1,0 +1,24 @@
+{
+  "name": "gestor-tareas",
+  "version": "1.0.0",
+  "description": "Gestor de Tareas (To-Do List) - Proyecto demo de Gestion de la Configuracion de Software",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node src/app.js",
+    "test": "jest --runInBand",
+    "lint": "eslint ."
+  },
+  "keywords": ["tareas", "todo", "express", "sqlite"],
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  }
+}
