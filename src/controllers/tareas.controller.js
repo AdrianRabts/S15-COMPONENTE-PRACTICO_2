@@ -11,7 +11,20 @@ function crear(req, res) {
   res.status(201).json(tarea);
 }
 
+function completar(req, res) {
+  const { id } = req.params;
+  const completada = req.body.completada !== undefined ? req.body.completada : true;
+  const tarea = tareaModel.marcarCompletada(id, completada);
+
+  if (!tarea) {
+    return res.status(404).json({ error: 'Tarea no encontrada' });
+  }
+
+  res.json(tarea);
+}
+
 module.exports = {
   listar,
   crear,
+  completar,
 };
