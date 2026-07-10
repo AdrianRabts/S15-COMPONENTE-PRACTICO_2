@@ -68,4 +68,18 @@ describe('API de tareas', () => {
     expect(res.body).toHaveProperty('pendientes');
     expect(res.body.completadas).toBeGreaterThanOrEqual(1);
   });
+
+  test('POST /api/tareas asigna prioridad "alta" cuando se especifica', async () => {
+    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea urgente', prioridad: 'alta' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.prioridad).toBe('alta');
+  });
+
+  test('POST /api/tareas asigna prioridad "media" por defecto', async () => {
+    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea sin prioridad' });
+
+    expect(res.status).toBe(201);
+    expect(res.body.prioridad).toBe('media');
+  });
 });
