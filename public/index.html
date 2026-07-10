@@ -925,7 +925,7 @@
         <span class="label">Tasa de completado</span>
       </div>
       <div class="stat-card">
-        <span class="valor" id="dash-racha">🔥 0</span>
+        <span class="valor" id="dash-racha">0</span>
         <span class="label">Racha actual (días)</span>
       </div>
       <div class="stat-card">
@@ -1437,7 +1437,7 @@
       ]);
 
       document.getElementById('dash-tasa').textContent = `${resumen.tasaCompletado}%`;
-      document.getElementById('dash-racha').textContent = `🔥 ${racha.racha}`;
+      document.getElementById('dash-racha').textContent = `${racha.racha}`;
 
       const dashVencidas = document.getElementById('dash-vencidas');
       dashVencidas.textContent = resumen.vencidas;
