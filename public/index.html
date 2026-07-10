@@ -181,7 +181,7 @@
     color-scheme: dark;
   }
 
-  .btn-agregar-subtarea {
+  .btn-agregar-detalles {
     font-family: var(--font-mono);
     font-size: 13px;
     background: none;
@@ -193,12 +193,23 @@
     align-self: flex-start;
   }
 
-  .btn-agregar-subtarea:hover {
+  .btn-agregar-detalles:hover {
     text-decoration: underline;
   }
 
-  #campo-subtareas[hidden] {
-    display: none;
+  .detalles-tarea {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 300px;
+    opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.2s ease;
+  }
+
+  .detalles-tarea.oculto {
+    max-height: 0;
+    opacity: 0;
   }
 
   .btn-crear-tarea {
@@ -217,6 +228,15 @@
 
   .btn-crear-tarea:hover {
     background: #4A78D6;
+  }
+
+  .btn-crear-tarea:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-crear-tarea:disabled:hover {
+    background: var(--accent);
   }
 
   /* Card Resumen */
@@ -693,33 +713,36 @@
         <input type="text" id="titulo" placeholder="¿Qué tienes que hacer?" required />
       </div>
 
-      <div class="campo">
-        <label for="descripcion">Descripción</label>
-        <input type="text" id="descripcion" placeholder="Agrega detalles (opcional)" />
-      </div>
+      <button type="button" class="btn-agregar-detalles" id="btn-agregar-detalles">+ Agregar detalles (fecha, prioridad, subtareas)</button>
 
-      <div class="fila-fecha-prioridad">
+      <div class="detalles-tarea oculto" id="detalles-tarea">
         <div class="campo">
-          <label for="fecha-limite">Fecha límite</label>
-          <input type="date" id="fecha-limite" aria-label="Fecha límite" />
+          <label for="descripcion">Descripción</label>
+          <input type="text" id="descripcion" placeholder="Agrega detalles (opcional)" />
         </div>
+
+        <div class="fila-fecha-prioridad">
+          <div class="campo">
+            <label for="fecha-limite">Fecha límite</label>
+            <input type="date" id="fecha-limite" aria-label="Fecha límite" />
+          </div>
+          <div class="campo">
+            <label for="prioridad">Prioridad</label>
+            <select id="prioridad">
+              <option value="media">media</option>
+              <option value="alta">alta</option>
+              <option value="baja">baja</option>
+            </select>
+          </div>
+        </div>
+
         <div class="campo">
-          <label for="prioridad">Prioridad</label>
-          <select id="prioridad">
-            <option value="media">media</option>
-            <option value="alta">alta</option>
-            <option value="baja">baja</option>
-          </select>
+          <label for="subtareas">Subtareas</label>
+          <input type="text" id="subtareas" placeholder="Ej: escribir, revisar, enviar" />
         </div>
       </div>
 
-      <button type="button" class="btn-agregar-subtarea" id="btn-agregar-subtarea">+ agregar subtarea</button>
-      <div class="campo" id="campo-subtareas" hidden>
-        <label for="subtareas">Subtareas</label>
-        <input type="text" id="subtareas" placeholder="Separadas por coma" />
-      </div>
-
-      <button type="submit" class="btn-crear-tarea">Crear tarea</button>
+      <button type="submit" class="btn-crear-tarea" id="btn-crear-tarea" disabled>Crear tarea</button>
     </form>
   </div>
 
@@ -890,8 +913,10 @@
           ? `<span class="vence ${vencida ? 'vencida' : ''}">vence: ${formatearFecha(tarea.fecha_limite)}</span>`
           : '';
 
-        const contadorHtml = subtareas.length > 0
-          ? `<span class="contador-subtareas">${subtareas.filter((s) => s.completada).length}/${subtareas.length}</span>`
+        const totalSubtareas = subtareas.length;
+        const completadasSubtareas = subtareas.filter((s) => s.completada).length;
+        const contadorHtml = totalSubtareas > 0
+          ? `<span class="contador-subtareas" title="${completadasSubtareas} de ${totalSubtareas} completadas">${completadasSubtareas}/${totalSubtareas}</span>`
           : '';
 
         const checklistHtml = subtareas.length > 0
@@ -900,12 +925,15 @@
               .join('')}</ul>`
           : '';
 
+        const prioridad = tarea.prioridad || 'media';
+        const prioridadCapitalizada = prioridad.charAt(0).toUpperCase() + prioridad.slice(1);
+
         li.innerHTML = `
           <div class="fila-principal">
             <button class="estado" data-id="${tarea.id}" aria-label="Cambiar estado">${tarea.completada ? '✓' : '○'}</button>
             <span class="titulo">${tarea.titulo}</span>
             ${venceHtml}
-            <span class="badge-prioridad" data-prioridad="${tarea.prioridad || 'media'}">${tarea.prioridad || 'media'}</span>
+            <span class="badge-prioridad" data-prioridad="${prioridad}" title="Prioridad: ${prioridadCapitalizada}">${prioridad}</span>
             ${contadorHtml}
             <button class="editar" data-id="${tarea.id}" aria-label="Editar título">✎</button>
             <button class="eliminar" data-id="${tarea.id}" aria-label="Eliminar tarea">✕</button>
@@ -964,8 +992,9 @@
       registrarActividad('creaste', titulo);
       mostrarToast('crear', `Creaste "${titulo}"`);
       form.reset();
-      document.getElementById('campo-subtareas').hidden = true;
-      document.getElementById('btn-agregar-subtarea').hidden = false;
+      detallesTarea.classList.add('oculto');
+      btnAgregarDetalles.textContent = '+ Agregar detalles (fecha, prioridad, subtareas)';
+      btnCrearTarea.disabled = true;
       refrescar();
     });
 
@@ -1057,11 +1086,21 @@
       }
     });
 
-    document.getElementById('btn-agregar-subtarea').addEventListener('click', (e) => {
-      const campo = document.getElementById('campo-subtareas');
-      campo.hidden = false;
-      e.target.hidden = true;
-      document.getElementById('subtareas').focus();
+    const btnAgregarDetalles = document.getElementById('btn-agregar-detalles');
+    const detallesTarea = document.getElementById('detalles-tarea');
+
+    btnAgregarDetalles.addEventListener('click', () => {
+      const abierto = detallesTarea.classList.toggle('oculto') === false;
+      btnAgregarDetalles.textContent = abierto
+        ? '– Ocultar detalles'
+        : '+ Agregar detalles (fecha, prioridad, subtareas)';
+    });
+
+    const tituloInput = document.getElementById('titulo');
+    const btnCrearTarea = document.getElementById('btn-crear-tarea');
+
+    tituloInput.addEventListener('input', () => {
+      btnCrearTarea.disabled = tituloInput.value.trim().length === 0;
     });
 
     buscarInput.addEventListener('input', refrescar);
