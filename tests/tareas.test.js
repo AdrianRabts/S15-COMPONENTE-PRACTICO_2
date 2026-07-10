@@ -82,4 +82,9 @@ describe('API de tareas', () => {
     expect(res.status).toBe(201);
     expect(res.body.prioridad).toBe('media');
   });
+
+  test('POST /api/tareas con prioridad inválida devuelve error 400', async () => {
+    const res = await request(app).post('/api/tareas').send({ titulo: 'Tarea rara', prioridad: 'urgentisima' });
+    expect(res.status).toBe(400);
+  });
 });
