@@ -2,7 +2,19 @@
 
 Aplicación simple de gestión de tareas (To-Do List) construida con Node.js, Express y SQLite.
 
-Proyecto final de la materia "Gestión de la Configuración de Software".
+Proyecto final de la materia "Gestión de la Configuración de Software". Grupo: Joel, Joseph, Josue y Alan.
+
+Este proyecto se usa como demo en vivo de: control de cambios, versionamiento con Git, integración continua, despliegue continuo, reutilización de código y variabilidad (V1 vs V2).
+
+## Reutilización de código
+
+- `src/middlewares/validar.middleware.js`: middleware de validación reutilizado en varias rutas (crear tarea, validar id).
+- `src/middlewares/manejarErrores.middleware.js`: manejador de errores centralizado para toda la app.
+- `src/models/tarea.model.js`: acceso a datos separado del controller (patrón repository).
+
+## Gestión del cambio
+
+Ver [`docs/gestion-cambios.md`](docs/gestion-cambios.md) para el registro del cambio de V1 a V2.
 
 ## Instalación local
 
