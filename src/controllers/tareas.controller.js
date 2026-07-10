@@ -6,8 +6,8 @@ function listar(req, res) {
 }
 
 function crear(req, res) {
-  const { titulo, descripcion } = req.body;
-  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion });
+  const { titulo, descripcion, prioridad } = req.body;
+  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion, prioridad });
   res.status(201).json(tarea);
 }
 
