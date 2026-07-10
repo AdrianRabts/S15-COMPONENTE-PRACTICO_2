@@ -4,6 +4,12 @@ const request = require('supertest');
 const app = require('../src/app');
 
 describe('API de tareas', () => {
+  test('GET /health responde con status ok', async () => {
+    const res = await request(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ status: 'ok' });
+  });
+
   test('POST /api/tareas crea una tarea nueva', async () => {
     const res = await request(app)
       .post('/api/tareas')
