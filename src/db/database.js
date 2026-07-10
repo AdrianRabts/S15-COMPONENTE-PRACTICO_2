@@ -16,4 +16,10 @@ db.exec(`
   )
 `);
 
+const columnas = db.prepare("PRAGMA table_info(tareas)").all().map((col) => col.name);
+
+if (!columnas.includes('prioridad')) {
+  db.exec("ALTER TABLE tareas ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'");
+}
+
 module.exports = db;
