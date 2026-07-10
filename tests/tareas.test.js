@@ -37,4 +37,9 @@ describe('API de tareas', () => {
 
     expect(res.status).toBe(204);
   });
+
+  test('POST /api/tareas sin titulo devuelve error 400', async () => {
+    const res = await request(app).post('/api/tareas').send({ descripcion: 'sin titulo' });
+    expect(res.status).toBe(400);
+  });
 });
