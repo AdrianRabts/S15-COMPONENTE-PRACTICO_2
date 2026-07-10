@@ -64,6 +64,15 @@
     color: var(--text-primary);
   }
 
+  @keyframes parpadeo {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  #cursor {
+    animation: parpadeo 1s step-start infinite;
+  }
+
   /* Formulario de nueva tarea */
   .form-tarea {
     display: flex;
