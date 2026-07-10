@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
     --bg: #14171C;
@@ -111,6 +112,121 @@
     font-size: 14px;
     color: var(--text-secondary);
     margin: 0 0 16px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .tab {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 10px 16px;
+    cursor: pointer;
+  }
+
+  .tab.activo {
+    color: var(--text-primary);
+    border-color: var(--accent);
+  }
+
+  /* Dashboard */
+  .dashboard-stats {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    flex: 1;
+    min-width: 130px;
+  }
+
+  .stat-card .valor {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 28px;
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .stat-card .valor.con-vencidas {
+    color: var(--priority-alta);
+  }
+
+  .stat-card.tasa .valor {
+    color: var(--completed);
+  }
+
+  .stat-card .label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .dashboard-graficos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .grafico-card {
+    grid-column: span 1;
+  }
+
+  .grafico-card.ancho-completo {
+    grid-column: span 2;
+  }
+
+  .grafico-contenedor {
+    position: relative;
+    height: 220px;
+  }
+
+  .grafico-vacio {
+    font-family: var(--font-sans);
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 60px 0;
+  }
+
+  .anillo-progreso-wrap {
+    position: relative;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .anillo-progreso-porcentaje {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 26px;
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 720px) {
+    .dashboard-graficos {
+      grid-template-columns: 1fr;
+    }
+
+    .grafico-card.ancho-completo {
+      grid-column: span 1;
+    }
   }
 
   @keyframes parpadeo {
@@ -704,6 +820,12 @@
 
   <p class="guia-app">Organiza tus pendientes: créalos, márcalos como completados y sigue tu progreso.</p>
 
+  <div class="tabs">
+    <button type="button" class="tab activo" id="tab-tareas" data-vista="tareas">Tareas</button>
+    <button type="button" class="tab" id="tab-dashboard" data-vista="dashboard">Dashboard</button>
+  </div>
+
+  <div id="vista-tareas">
   <div class="card">
     <p class="card-label">Nueva tarea</p>
     <p class="guia-tarea">Crea una tarea para empezar</p>
@@ -793,6 +915,54 @@
     <span class="completadas" id="reporte-completadas">✓ 0 completadas</span>
     &nbsp;&nbsp;&nbsp;
     <span class="pendientes" id="reporte-pendientes">○ 0 pendientes</span>
+  </div>
+  </div>
+
+  <div id="vista-dashboard" hidden>
+    <div class="dashboard-stats">
+      <div class="stat-card tasa">
+        <span class="valor" id="dash-tasa">0%</span>
+        <span class="label">Tasa de completado</span>
+      </div>
+      <div class="stat-card">
+        <span class="valor" id="dash-racha">🔥 0</span>
+        <span class="label">Racha actual (días)</span>
+      </div>
+      <div class="stat-card">
+        <span class="valor" id="dash-vencidas">0</span>
+        <span class="label">Tareas vencidas</span>
+      </div>
+      <div class="stat-card">
+        <span class="valor" id="dash-tiempo">—</span>
+        <span class="label">Tiempo promedio</span>
+      </div>
+    </div>
+
+    <div class="dashboard-graficos">
+      <div class="card grafico-card ancho-completo">
+        <p class="card-label">Tareas completadas — últimos 7 días</p>
+        <div class="grafico-contenedor">
+          <canvas id="grafico-por-dia"></canvas>
+          <p class="grafico-vacio" id="grafico-por-dia-vacio" hidden>Aún no hay datos para mostrar</p>
+        </div>
+      </div>
+
+      <div class="card grafico-card">
+        <p class="card-label">Distribución por prioridad</p>
+        <div class="grafico-contenedor">
+          <canvas id="grafico-prioridad"></canvas>
+          <p class="grafico-vacio" id="grafico-prioridad-vacio" hidden>Aún no hay datos para mostrar</p>
+        </div>
+      </div>
+
+      <div class="card grafico-card">
+        <p class="card-label">Progreso general</p>
+        <div class="anillo-progreso-wrap">
+          <canvas id="grafico-progreso"></canvas>
+          <span class="anillo-progreso-porcentaje" id="anillo-progreso-porcentaje">0%</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="toasts" id="toasts"></div>
@@ -1136,6 +1306,161 @@
         buscarInput.blur();
         cargarTareas();
       }
+    });
+
+    // Dashboard
+    const tabs = document.querySelectorAll('.tab');
+    const vistaTareas = document.getElementById('vista-tareas');
+    const vistaDashboard = document.getElementById('vista-dashboard');
+
+    function colorVar(nombre) {
+      return getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
+    }
+
+    const DIAS_SEMANA = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    let chartPorDia = null;
+    let chartPrioridad = null;
+    let chartProgreso = null;
+
+    function renderGraficoPorDia(datos) {
+      const canvas = document.getElementById('grafico-por-dia');
+      const vacio = document.getElementById('grafico-por-dia-vacio');
+      const hayDatos = datos.some((d) => d.completadas > 0);
+      canvas.hidden = !hayDatos;
+      vacio.hidden = hayDatos;
+      if (chartPorDia) {
+        chartPorDia.destroy();
+        chartPorDia = null;
+      }
+      if (!hayDatos) return;
+
+      const labels = datos.map((d) => DIAS_SEMANA[new Date(`${d.fecha}T00:00:00`).getDay()]);
+
+      chartPorDia = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Completadas',
+            data: datos.map((d) => d.completadas),
+            backgroundColor: colorVar('--accent'),
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: colorVar('--text-secondary') }, grid: { display: false } },
+            y: {
+              beginAtZero: true,
+              ticks: { color: colorVar('--text-secondary'), stepSize: 1 },
+              grid: { color: colorVar('--border') },
+            },
+          },
+        },
+      });
+    }
+
+    function renderGraficoPrioridad(datos) {
+      const canvas = document.getElementById('grafico-prioridad');
+      const vacio = document.getElementById('grafico-prioridad-vacio');
+      const hayDatos = datos.some((d) => d.cantidad > 0);
+      canvas.hidden = !hayDatos;
+      vacio.hidden = hayDatos;
+      if (chartPrioridad) {
+        chartPrioridad.destroy();
+        chartPrioridad = null;
+      }
+      if (!hayDatos) return;
+
+      const coloresPorPrioridad = {
+        alta: colorVar('--priority-alta'),
+        media: colorVar('--priority-media'),
+        baja: colorVar('--priority-baja'),
+      };
+
+      chartPrioridad = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          labels: datos.map((d) => d.prioridad.charAt(0).toUpperCase() + d.prioridad.slice(1)),
+          datasets: [{
+            data: datos.map((d) => d.cantidad),
+            backgroundColor: datos.map((d) => coloresPorPrioridad[d.prioridad]),
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: colorVar('--text-secondary') } },
+          },
+        },
+      });
+    }
+
+    function renderGraficoProgreso(resumen) {
+      const canvas = document.getElementById('grafico-progreso');
+      document.getElementById('anillo-progreso-porcentaje').textContent = `${resumen.tasaCompletado}%`;
+
+      if (chartProgreso) {
+        chartProgreso.destroy();
+        chartProgreso = null;
+      }
+
+      const hayDatos = resumen.total > 0;
+      chartProgreso = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: hayDatos ? [resumen.completadas, resumen.pendientes] : [1],
+            backgroundColor: hayDatos ? [colorVar('--completed'), colorVar('--border')] : [colorVar('--border')],
+            borderWidth: 0,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '75%',
+          plugins: { legend: { display: false }, tooltip: { enabled: hayDatos } },
+        },
+      });
+    }
+
+    async function cargarDashboard() {
+      const [resumen, porDia, porPrioridad, racha] = await Promise.all([
+        fetch('/api/analytics/resumen').then((r) => r.json()),
+        fetch('/api/analytics/por-dia').then((r) => r.json()),
+        fetch('/api/analytics/por-prioridad').then((r) => r.json()),
+        fetch('/api/analytics/racha').then((r) => r.json()),
+      ]);
+
+      document.getElementById('dash-tasa').textContent = `${resumen.tasaCompletado}%`;
+      document.getElementById('dash-racha').textContent = `🔥 ${racha.racha}`;
+
+      const dashVencidas = document.getElementById('dash-vencidas');
+      dashVencidas.textContent = resumen.vencidas;
+      dashVencidas.classList.toggle('con-vencidas', resumen.vencidas > 0);
+
+      document.getElementById('dash-tiempo').textContent = resumen.tiempoPromedioHoras !== null
+        ? `${resumen.tiempoPromedioHoras} h`
+        : '—';
+
+      renderGraficoPorDia(porDia);
+      renderGraficoPrioridad(porPrioridad);
+      renderGraficoProgreso(resumen);
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        tabs.forEach((t) => t.classList.remove('activo'));
+        tab.classList.add('activo');
+        const esTareas = tab.dataset.vista === 'tareas';
+        vistaTareas.hidden = !esTareas;
+        vistaDashboard.hidden = esTareas;
+        if (!esTareas) cargarDashboard();
+      });
     });
 
     refrescar();
