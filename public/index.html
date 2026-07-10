@@ -101,13 +101,19 @@
     box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
   }
 
-  select#prioridad {
+  select#prioridad,
+  select#orden,
+  .form-tarea input[type="date"] {
     font-family: var(--font-mono);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
     padding: 10px 12px;
+  }
+
+  .form-tarea input[type="date"] {
+    color-scheme: dark;
   }
 
   .btn-agregar {
@@ -210,6 +216,11 @@
     color: var(--text-secondary);
   }
 
+  select#orden {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
   .chip {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -273,10 +284,70 @@
     color: var(--completed);
   }
 
+  li.tarea {
+    flex-wrap: wrap;
+    cursor: pointer;
+  }
+
+  li.tarea .fila-principal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    width: 100%;
+  }
+
   .titulo {
     font-family: var(--font-sans);
     flex: 1;
     transition: opacity 0.3s ease;
+  }
+
+  .vence {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .vence.vencida {
+    color: var(--priority-alta);
+  }
+
+  .contador-subtareas {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  .checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 30px;
+    width: 100%;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease, opacity 0.2s ease;
+  }
+
+  li.tarea.expandida .checklist {
+    max-height: 200px;
+    opacity: 1;
+  }
+
+  .checklist li {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 4px 0;
+    cursor: pointer;
+  }
+
+  .checklist li.completada {
+    text-decoration: line-through;
+    opacity: 0.6;
   }
 
   li.tarea.completada .titulo {
@@ -425,6 +496,8 @@
   <form class="form-tarea" id="form-tarea">
     <input type="text" id="titulo" placeholder="&gt; nueva tarea..." required />
     <input type="text" id="descripcion" placeholder="descripción (opcional)" />
+    <input type="text" id="subtareas" placeholder="subtareas separadas por coma (opcional)" />
+    <input type="date" id="fecha-limite" aria-label="Fecha límite" />
     <select id="prioridad">
       <option value="media">media</option>
       <option value="alta">alta</option>
@@ -449,6 +522,11 @@
 
   <div class="filtros">
     <input type="text" id="buscar" placeholder="grep..." />
+    <select id="orden">
+      <option value="reciente">más reciente</option>
+      <option value="prioridad">prioridad</option>
+      <option value="fecha_limite">fecha límite</option>
+    </select>
     <button type="button" class="chip" data-prioridad="alta">Alta</button>
     <button type="button" class="chip" data-prioridad="media">Media</button>
     <button type="button" class="chip" data-prioridad="baja">Baja</button>
@@ -524,6 +602,32 @@
     }
 
     let prioridadActiva = null;
+    const ordenSelect = document.getElementById('orden');
+    const PESO_PRIORIDAD = { alta: 0, media: 1, baja: 2 };
+    const expandidas = new Set();
+
+    function formatearFecha(fechaIso) {
+      const [anio, mes, dia] = fechaIso.split('-');
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      return `${Number(dia)} ${meses[Number(mes) - 1]}`;
+    }
+
+    function ordenarTareas(tareas) {
+      const orden = ordenSelect.value;
+      const copia = [...tareas];
+
+      if (orden === 'prioridad') {
+        copia.sort((a, b) => PESO_PRIORIDAD[a.prioridad] - PESO_PRIORIDAD[b.prioridad]);
+      } else if (orden === 'fecha_limite') {
+        copia.sort((a, b) => {
+          if (!a.fecha_limite) return 1;
+          if (!b.fecha_limite) return -1;
+          return a.fecha_limite.localeCompare(b.fecha_limite);
+        });
+      }
+
+      return copia;
+    }
 
     async function cargarTareas() {
       const query = buscarInput.value;
@@ -535,20 +639,48 @@
         tareas = tareas.filter((tarea) => tarea.prioridad === prioridadActiva);
       }
 
+      tareas = ordenarTareas(tareas);
+
       lista.innerHTML = '';
       estadoVacio.hidden = tareas.length > 0;
+
+      const hoy = new Date().toISOString().slice(0, 10);
 
       tareas.forEach((tarea) => {
         const li = document.createElement('li');
         li.className = 'tarea';
         li.dataset.id = tarea.id;
         if (tarea.completada) li.classList.add('completada');
+        if (expandidas.has(String(tarea.id))) li.classList.add('expandida');
+
+        const subtareas = tarea.subtareas || [];
+        const vencida = tarea.fecha_limite && tarea.fecha_limite < hoy && !tarea.completada;
+
+        const venceHtml = tarea.fecha_limite
+          ? `<span class="vence ${vencida ? 'vencida' : ''}">vence: ${formatearFecha(tarea.fecha_limite)}</span>`
+          : '';
+
+        const contadorHtml = subtareas.length > 0
+          ? `<span class="contador-subtareas">${subtareas.filter((s) => s.completada).length}/${subtareas.length}</span>`
+          : '';
+
+        const checklistHtml = subtareas.length > 0
+          ? `<ul class="checklist">${subtareas
+              .map((s, i) => `<li class="${s.completada ? 'completada' : ''}" data-index="${i}">${s.completada ? '✓' : '○'} ${s.texto}</li>`)
+              .join('')}</ul>`
+          : '';
+
         li.innerHTML = `
-          <button class="estado" data-id="${tarea.id}" aria-label="Cambiar estado">${tarea.completada ? '✓' : '○'}</button>
-          <span class="titulo">${tarea.titulo}</span>
-          <span class="badge-prioridad" data-prioridad="${tarea.prioridad || 'media'}">${tarea.prioridad || 'media'}</span>
-          <button class="editar" data-id="${tarea.id}" aria-label="Editar título">✎</button>
-          <button class="eliminar" data-id="${tarea.id}" aria-label="Eliminar tarea">✕</button>
+          <div class="fila-principal">
+            <button class="estado" data-id="${tarea.id}" aria-label="Cambiar estado">${tarea.completada ? '✓' : '○'}</button>
+            <span class="titulo">${tarea.titulo}</span>
+            ${venceHtml}
+            <span class="badge-prioridad" data-prioridad="${tarea.prioridad || 'media'}">${tarea.prioridad || 'media'}</span>
+            ${contadorHtml}
+            <button class="editar" data-id="${tarea.id}" aria-label="Editar título">✎</button>
+            <button class="eliminar" data-id="${tarea.id}" aria-label="Eliminar tarea">✕</button>
+          </div>
+          ${checklistHtml}
         `;
         lista.appendChild(li);
       });
@@ -577,10 +709,24 @@
       const titulo = document.getElementById('titulo').value;
       const descripcion = document.getElementById('descripcion').value;
       const prioridad = document.getElementById('prioridad').value;
+      const fechaLimite = document.getElementById('fecha-limite').value;
+      const subtareasTexto = document.getElementById('subtareas').value;
+      const subtareas = subtareasTexto
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((texto) => ({ texto, completada: false }));
+
       await fetch('/api/tareas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ titulo, descripcion, prioridad }),
+        body: JSON.stringify({
+          titulo,
+          descripcion,
+          prioridad,
+          fecha_limite: fechaLimite || undefined,
+          subtareas,
+        }),
       });
       registrarActividad('creaste', titulo);
       mostrarToast('crear', `Creaste "${titulo}"`);
@@ -589,6 +735,15 @@
     });
 
     lista.addEventListener('click', async (e) => {
+      const itemChecklist = e.target.closest('.checklist li');
+      if (itemChecklist) {
+        const id = itemChecklist.closest('li.tarea').dataset.id;
+        const index = itemChecklist.dataset.index;
+        await fetch(`/api/tareas/${id}/subtareas/${index}`, { method: 'PATCH' });
+        refrescar();
+        return;
+      }
+
       if (e.target.classList.contains('estado')) {
         const id = e.target.dataset.id;
         const completar = e.target.textContent.trim() !== '✓';
@@ -653,9 +808,22 @@
           }
         });
       }
+
+      if (!e.target.closest('button') && !e.target.closest('.titulo-input')) {
+        const li = e.target.closest('li.tarea');
+        if (li) {
+          li.classList.toggle('expandida');
+          if (li.classList.contains('expandida')) {
+            expandidas.add(li.dataset.id);
+          } else {
+            expandidas.delete(li.dataset.id);
+          }
+        }
+      }
     });
 
     buscarInput.addEventListener('input', refrescar);
+    ordenSelect.addEventListener('change', cargarTareas);
 
     chips.forEach((chip) => {
       chip.addEventListener('click', () => {
@@ -670,6 +838,23 @@
         }
         cargarTareas();
       });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      const enCampoDeTexto = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
+
+      if (e.key === '/' && !enCampoDeTexto) {
+        e.preventDefault();
+        buscarInput.focus();
+      }
+
+      if (e.key === 'Escape') {
+        buscarInput.value = '';
+        prioridadActiva = null;
+        chips.forEach((c) => c.classList.remove('activo'));
+        buscarInput.blur();
+        cargarTareas();
+      }
     });
 
     refrescar();
