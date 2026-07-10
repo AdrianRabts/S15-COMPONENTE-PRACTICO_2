@@ -1,6 +1,12 @@
 const tareaModel = require('../models/tarea.model');
 
 function listar(req, res) {
+  const { buscar } = req.query;
+
+  if (buscar) {
+    return res.json(tareaModel.buscarPorTitulo(buscar));
+  }
+
   const tareas = tareaModel.obtenerTodas();
   res.json(tareas);
 }
