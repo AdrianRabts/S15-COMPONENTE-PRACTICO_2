@@ -50,4 +50,16 @@ describe('API de tareas', () => {
     expect(res.status).toBe(200);
     expect(res.body.some((tarea) => tarea.titulo.includes('leche'))).toBe(true);
   });
+
+  test('GET /api/tareas/reporte cuenta tareas completadas vs pendientes', async () => {
+    const creada = await request(app).post('/api/tareas').send({ titulo: 'Tarea para reporte' });
+    await request(app).patch(`/api/tareas/${creada.body.id}/completar`).send({ completada: true });
+
+    const res = await request(app).get('/api/tareas/reporte');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('completadas');
+    expect(res.body).toHaveProperty('pendientes');
+    expect(res.body.completadas).toBeGreaterThanOrEqual(1);
+  });
 });
