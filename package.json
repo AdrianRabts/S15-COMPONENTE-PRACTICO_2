@@ -11,6 +11,9 @@
   },
   "keywords": ["tareas", "todo", "express", "sqlite"],
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "better-sqlite3": "^11.3.0",
     "ejs": "^3.1.10",
