@@ -65,3 +65,7 @@ Cada `push` y `pull request` a `main` dispara el workflow definido en `.github/w
 5. Cada push a `main` dispara un nuevo deploy automático.
 
 **Link al despliegue:** _pendiente de agregar una vez creado el servicio en Render._
+
+## Licencia
+
+MIT
