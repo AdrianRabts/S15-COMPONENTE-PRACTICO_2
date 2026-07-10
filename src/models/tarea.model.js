@@ -31,8 +31,13 @@ function buscarPorTitulo(texto) {
 }
 
 function contarPorEstado() {
-  const completadas = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 1').get().total;
-  const pendientes = db.prepare('SELECT COUNT(*) AS total FROM tareas WHERE completada = 0').get().total;
+  const filas = db
+    .prepare('SELECT completada, COUNT(*) AS total FROM tareas GROUP BY completada')
+    .all();
+
+  const completadas = filas.find((f) => f.completada === 1)?.total || 0;
+  const pendientes = filas.find((f) => f.completada === 0)?.total || 0;
+
   return { completadas, pendientes };
 }
 
