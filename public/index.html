@@ -307,7 +307,8 @@
     color: var(--priority-baja);
   }
 
-  .eliminar {
+  .eliminar,
+  .editar {
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -317,12 +318,27 @@
     visibility: hidden;
   }
 
-  li.tarea:hover .eliminar {
+  li.tarea:hover .eliminar,
+  li.tarea:hover .editar {
     visibility: visible;
   }
 
   .eliminar:hover {
     color: var(--priority-alta);
+  }
+
+  .editar:hover {
+    color: var(--accent);
+  }
+
+  .titulo-input {
+    font-family: var(--font-sans);
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--text-primary);
+    padding: 2px 6px;
   }
 
   /* Reporte */
@@ -471,6 +487,7 @@
           <button class="estado" data-id="${tarea.id}" aria-label="Cambiar estado">${tarea.completada ? '✓' : '○'}</button>
           <span class="titulo">${tarea.titulo}</span>
           <span class="badge-prioridad" data-prioridad="${tarea.prioridad || 'media'}">${tarea.prioridad || 'media'}</span>
+          <button class="editar" data-id="${tarea.id}" aria-label="Editar título">✎</button>
           <button class="eliminar" data-id="${tarea.id}" aria-label="Eliminar tarea">✕</button>
         `;
         lista.appendChild(li);
@@ -534,6 +551,42 @@
           registrarActividad('eliminaste', titulo);
           refrescar();
         }, 250);
+      }
+
+      if (e.target.classList.contains('editar')) {
+        const id = e.target.dataset.id;
+        const li = e.target.closest('li.tarea');
+        const span = li.querySelector('.titulo');
+        const tituloActual = span.textContent;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'titulo-input';
+        input.value = tituloActual;
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        const guardar = async () => {
+          const nuevoTitulo = input.value.trim();
+          if (nuevoTitulo && nuevoTitulo !== tituloActual) {
+            await fetch(`/api/tareas/${id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ titulo: nuevoTitulo }),
+            });
+          }
+          refrescar();
+        };
+
+        input.addEventListener('blur', guardar);
+        input.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter') input.blur();
+          if (ev.key === 'Escape') {
+            input.removeEventListener('blur', guardar);
+            refrescar();
+          }
+        });
       }
     });
 
