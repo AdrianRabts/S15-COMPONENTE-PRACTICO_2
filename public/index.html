@@ -122,6 +122,53 @@
     font-size: 18px;
   }
 
+  /* Panel de stats */
+  .stats {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .stats-numeros {
+    display: flex;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+
+  .stats-numeros .valor {
+    font-weight: 600;
+    font-size: 15px;
+    display: block;
+    color: var(--text-primary);
+  }
+
+  .stats-numeros .vencidas .valor {
+    color: var(--priority-alta);
+  }
+
+  .stats-numeros .label {
+    color: var(--text-secondary);
+  }
+
+  .progreso-track {
+    background: var(--border);
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .progreso-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--completed));
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
   /* Barra de filtros */
   .filtros {
     display: flex;
@@ -311,6 +358,17 @@
     <button type="submit" class="btn-agregar" aria-label="Agregar tarea">+</button>
   </form>
 
+  <div class="stats">
+    <div class="stats-numeros">
+      <span class="total"><span class="valor" id="stat-total">0</span><span class="label">total</span></span>
+      <span class="completadas"><span class="valor" id="stat-completadas">0</span><span class="label">completadas</span></span>
+      <span class="vencidas"><span class="valor" id="stat-vencidas">0</span><span class="label">vencidas</span></span>
+    </div>
+    <div class="progreso-track">
+      <div class="progreso-fill" id="progreso-fill"></div>
+    </div>
+  </div>
+
   <div class="filtros">
     <input type="text" id="buscar" placeholder="grep..." />
     <button type="button" class="chip" data-prioridad="alta">Alta</button>
@@ -337,6 +395,10 @@
     const chips = document.querySelectorAll('.chip');
     const reporteCompletadas = document.getElementById('reporte-completadas');
     const reportePendientes = document.getElementById('reporte-pendientes');
+    const statTotal = document.getElementById('stat-total');
+    const statCompletadas = document.getElementById('stat-completadas');
+    const statVencidas = document.getElementById('stat-vencidas');
+    const progresoFill = document.getElementById('progreso-fill');
 
     let prioridadActiva = null;
 
@@ -370,9 +432,15 @@
 
     async function cargarReporte() {
       const res = await fetch('/api/tareas/reporte');
-      const { completadas, pendientes } = await res.json();
+      const { completadas, pendientes, vencidas } = await res.json();
       reporteCompletadas.textContent = `✓ ${completadas} completadas`;
       reportePendientes.textContent = `○ ${pendientes} pendientes`;
+
+      const total = completadas + pendientes;
+      statTotal.textContent = total;
+      statCompletadas.textContent = completadas;
+      statVencidas.textContent = vencidas;
+      progresoFill.style.width = total > 0 ? `${Math.round((completadas / total) * 100)}%` : '0%';
     }
 
     async function refrescar() {
