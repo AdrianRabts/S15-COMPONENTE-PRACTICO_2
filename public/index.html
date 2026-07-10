@@ -186,6 +186,12 @@
     gap: 10px;
     padding: 10px 6px;
     border-bottom: 1px solid var(--border);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  li.tarea.saliendo {
+    opacity: 0;
+    transform: translateX(-16px);
   }
 
   .estado {
@@ -206,6 +212,12 @@
   .titulo {
     font-family: var(--font-sans);
     flex: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  li.tarea.completada .titulo {
+    text-decoration: line-through;
+    opacity: 0.5;
   }
 
   .badge-prioridad {
@@ -396,8 +408,12 @@
 
       if (e.target.classList.contains('eliminar')) {
         const id = e.target.dataset.id;
-        await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
-        refrescar();
+        const li = e.target.closest('li.tarea');
+        li.classList.add('saliendo');
+        setTimeout(async () => {
+          await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
+          refrescar();
+        }, 250);
       }
     });
 
