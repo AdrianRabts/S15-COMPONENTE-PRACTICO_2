@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const tareasRoutes = require('./routes/tareas.routes');
+const { manejarErrores, rutaNoEncontrada } = require('./middlewares/manejarErrores.middleware');
 
 const app = express();
 
@@ -10,6 +11,9 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/api/tareas', tareasRoutes);
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+app.use(rutaNoEncontrada);
+app.use(manejarErrores);
 
 const PORT = process.env.PORT || 3000;
 
