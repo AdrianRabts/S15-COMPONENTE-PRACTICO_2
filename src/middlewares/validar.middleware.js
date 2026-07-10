@@ -1,8 +1,14 @@
+const PRIORIDADES_VALIDAS = ['alta', 'media', 'baja'];
+
 function validarCrearTarea(req, res, next) {
-  const { titulo } = req.body;
+  const { titulo, prioridad } = req.body;
 
   if (!titulo || typeof titulo !== 'string' || titulo.trim().length === 0) {
     return res.status(400).json({ error: 'El campo "titulo" es obligatorio y debe ser texto.' });
+  }
+
+  if (prioridad !== undefined && !PRIORIDADES_VALIDAS.includes(prioridad)) {
+    return res.status(400).json({ error: 'El campo "prioridad" debe ser alta, media o baja.' });
   }
 
   next();
