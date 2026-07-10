@@ -539,7 +539,8 @@
     font-size: 13px;
     color: var(--text-secondary);
     border-top: 1px solid var(--border);
-    padding-top: 12px;
+    padding-top: 24px;
+    margin-top: 4px;
   }
 
   .reporte .completadas {
@@ -605,14 +606,26 @@
       padding: 16px 12px 40px;
     }
 
-    .form-tarea,
+    .card {
+      padding: 20px;
+    }
+
+    .fila-fecha-prioridad {
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .filtros {
       flex-direction: column;
       align-items: stretch;
     }
 
-    .filtros {
+    .filtros-controles {
       flex-wrap: wrap;
+    }
+
+    .filtros-controles select#orden {
+      flex: 1;
     }
 
     .filtros .chip {
@@ -620,14 +633,15 @@
       text-align: center;
     }
 
+    .stats-numeros {
+      gap: 20px;
+      flex-wrap: wrap;
+      row-gap: 12px;
+    }
+
     li.tarea .fila-principal {
       flex-wrap: wrap;
       row-gap: 6px;
-    }
-
-    .stats-numeros {
-      flex-wrap: wrap;
-      row-gap: 8px;
     }
 
     .toasts {
