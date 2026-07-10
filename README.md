@@ -73,10 +73,16 @@ npm test
 | PATCH | `/api/tareas/:id/completar` | Marca una tarea como completada |
 | PATCH | `/api/tareas/:id/subtareas/:index` | Togglea una subtarea puntual |
 | DELETE | `/api/tareas/:id` | Elimina una tarea |
+| GET | `/api/analytics/resumen` | Total, completadas, pendientes, vencidas, tasa de completado y tiempo promedio |
+| GET | `/api/analytics/por-dia` | Tareas completadas por día (últimos 7 días) |
+| GET | `/api/analytics/por-prioridad` | Conteo de tareas por prioridad |
+| GET | `/api/analytics/racha` | Días consecutivos con al menos una tarea completada |
 
 ### Frontend (tema terminal/CI)
 
 El frontend (`public/index.html`) sigue un tema visual de "terminal + log de commits", coherente con el enfoque DevOps del proyecto: panel de stats con barra de progreso, activity log en vivo, edición inline del título, notificaciones toast, orden por prioridad/fecha límite, y checklist de subtareas expandible por tarea.
+
+Tiene dos pestañas: **Tareas** (la vista de gestión de tareas) y **Dashboard** (analíticas de productividad con Chart.js: tasa de completado, racha, tareas vencidas, tiempo promedio, gráfico de barras de los últimos 7 días, dona de distribución por prioridad y anillo de progreso general).
 
 ## Integración Continua
 
