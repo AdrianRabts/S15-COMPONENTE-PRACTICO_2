@@ -18,6 +18,26 @@ Este proyecto se usa como demo en vivo de: control de cambios, versionamiento co
 
 Ver [`docs/gestion-cambios.md`](docs/gestion-cambios.md) para el registro del cambio de V1 a V2.
 
+## Estructura del proyecto
+
+```
+gestor-tareas/
+├── src/
+│   ├── app.js
+│   ├── routes/tareas.routes.js
+│   ├── controllers/tareas.controller.js
+│   ├── models/tarea.model.js
+│   ├── middlewares/
+│   │   ├── validar.middleware.js
+│   │   └── manejarErrores.middleware.js
+│   └── db/database.js
+├── public/index.html
+├── tests/tareas.test.js
+├── .github/workflows/ci.yml
+├── docs/gestion-cambios.md
+└── render.yaml
+```
+
 ## Instalación local
 
 ```bash
