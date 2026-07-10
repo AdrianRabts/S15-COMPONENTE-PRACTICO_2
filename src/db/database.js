@@ -22,4 +22,12 @@ if (!columnas.includes('prioridad')) {
   db.exec("ALTER TABLE tareas ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'");
 }
 
+if (!columnas.includes('fecha_limite')) {
+  db.exec('ALTER TABLE tareas ADD COLUMN fecha_limite TEXT');
+}
+
+if (!columnas.includes('subtareas')) {
+  db.exec('ALTER TABLE tareas ADD COLUMN subtareas TEXT');
+}
+
 module.exports = db;
