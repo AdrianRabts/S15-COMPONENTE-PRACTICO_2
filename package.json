@@ -7,6 +7,7 @@
     "start": "node src/app.js",
     "dev": "node src/app.js",
     "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch",
     "lint": "eslint ."
   },
   "keywords": ["tareas", "todo", "express", "sqlite"],
