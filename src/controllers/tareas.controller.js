@@ -22,9 +22,38 @@ function buscar(req, res) {
 }
 
 function crear(req, res) {
-  const { titulo, descripcion, prioridad } = req.body;
-  const tarea = tareaModel.crear({ titulo: titulo.trim(), descripcion, prioridad });
+  const { titulo, descripcion, prioridad, fecha_limite: fechaLimite, subtareas } = req.body;
+  const tarea = tareaModel.crear({
+    titulo: titulo.trim(),
+    descripcion,
+    prioridad,
+    fecha_limite: fechaLimite,
+    subtareas,
+  });
   res.status(201).json(tarea);
+}
+
+function actualizar(req, res) {
+  const { id } = req.params;
+  const { titulo, fecha_limite: fechaLimite } = req.body;
+  const tarea = tareaModel.actualizar(id, { titulo, fecha_limite: fechaLimite });
+
+  if (!tarea) {
+    return res.status(404).json({ error: 'Tarea no encontrada' });
+  }
+
+  res.json(tarea);
+}
+
+function toggleSubtarea(req, res) {
+  const { id, index } = req.params;
+  const tarea = tareaModel.toggleSubtarea(id, Number(index));
+
+  if (!tarea) {
+    return res.status(404).json({ error: 'Tarea o subtarea no encontrada' });
+  }
+
+  res.json(tarea);
 }
 
 function completar(req, res) {
@@ -61,4 +90,6 @@ module.exports = {
   eliminar,
   buscar,
   reporte,
+  actualizar,
+  toggleSubtarea,
 };
