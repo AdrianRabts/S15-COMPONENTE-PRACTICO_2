@@ -366,6 +366,48 @@
     padding: 32px 0;
   }
 
+  /* Toasts */
+  .toasts {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .toast {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: toast-entrada 0.2s ease;
+  }
+
+  .toast.saliendo {
+    animation: toast-salida 0.2s ease forwards;
+  }
+
+  .toast[data-tipo="crear"] { border-left-color: var(--accent); }
+  .toast[data-tipo="completar"] { border-left-color: var(--completed); }
+  .toast[data-tipo="eliminar"] { border-left-color: var(--priority-alta); }
+
+  @keyframes toast-entrada {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes toast-salida {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
   @media (max-width: 480px) {
     .form-tarea,
     .filtros {
@@ -423,6 +465,8 @@
     <span class="pendientes" id="reporte-pendientes">○ 0 pendientes</span>
   </div>
 
+  <div class="toasts" id="toasts"></div>
+
   <script>
     const lista = document.getElementById('lista-tareas');
     const form = document.getElementById('form-tarea');
@@ -462,6 +506,22 @@
     }
 
     setInterval(renderizarActividad, 30000);
+
+    const toastsContenedor = document.getElementById('toasts');
+    const ICONOS_TOAST = { crear: '$', completar: '✓', eliminar: '✕' };
+
+    function mostrarToast(tipo, mensaje) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.dataset.tipo = tipo;
+      toast.textContent = `${ICONOS_TOAST[tipo]} ${mensaje}`;
+      toastsContenedor.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('saliendo');
+        setTimeout(() => toast.remove(), 200);
+      }, 3000);
+    }
 
     let prioridadActiva = null;
 
@@ -523,6 +583,7 @@
         body: JSON.stringify({ titulo, descripcion, prioridad }),
       });
       registrarActividad('creaste', titulo);
+      mostrarToast('crear', `Creaste "${titulo}"`);
       form.reset();
       refrescar();
     });
@@ -537,7 +598,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ completada: completar }),
         });
-        if (completar) registrarActividad('completaste', titulo);
+        if (completar) {
+          registrarActividad('completaste', titulo);
+          mostrarToast('completar', `Completaste "${titulo}"`);
+        }
         refrescar();
       }
 
@@ -549,6 +613,7 @@
         setTimeout(async () => {
           await fetch(`/api/tareas/${id}`, { method: 'DELETE' });
           registrarActividad('eliminaste', titulo);
+          mostrarToast('eliminar', `Eliminaste "${titulo}"`);
           refrescar();
         }, 250);
       }
