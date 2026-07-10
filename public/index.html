@@ -47,6 +47,40 @@
     outline-offset: 2px;
   }
 
+  /* Sistema de cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card + .card {
+    margin-top: 0;
+  }
+
+  .card-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin: 0 0 16px;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .campo label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
   /* Header */
   header {
     background: var(--surface);
@@ -76,56 +110,98 @@
   /* Formulario de nueva tarea */
   .form-tarea {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 16px;
+    flex-direction: column;
+    gap: 16px;
   }
 
-  .form-tarea input[type="text"] {
+  .form-tarea input[type="text"],
+  .form-tarea input[type="date"] {
     font-family: var(--font-mono);
-    background: var(--surface);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
-    padding: 10px 12px;
-    flex: 1;
-    min-width: 160px;
+    padding: 12px 14px;
+    width: 100%;
+  }
+
+  .form-tarea input#titulo {
+    height: 48px;
+    font-size: 15px;
   }
 
   .form-tarea input[type="text"]::placeholder {
     color: var(--text-secondary);
   }
 
-  .form-tarea input[type="text"]:focus {
+  .form-tarea input[type="text"]:focus,
+  .form-tarea input[type="date"]:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
+  }
+
+  .fila-fecha-prioridad {
+    display: flex;
+    gap: 16px;
+  }
+
+  .fila-fecha-prioridad .campo {
+    flex: 1;
+    min-width: 0;
   }
 
   select#prioridad,
   select#orden,
   .form-tarea input[type="date"] {
     font-family: var(--font-mono);
-    background: var(--surface);
+    background: var(--bg);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text-primary);
-    padding: 10px 12px;
+    padding: 12px 14px;
+    width: 100%;
   }
 
   .form-tarea input[type="date"] {
     color-scheme: dark;
   }
 
-  .btn-agregar {
+  .btn-agregar-subtarea {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+    align-self: flex-start;
+  }
+
+  .btn-agregar-subtarea:hover {
+    text-decoration: underline;
+  }
+
+  #campo-subtareas[hidden] {
+    display: none;
+  }
+
+  .btn-crear-tarea {
     font-family: var(--font-mono);
     font-weight: 600;
+    font-size: 15px;
     background: var(--accent);
-    color: #0B1015;
+    color: #FFFFFF;
     border: none;
     border-radius: 6px;
-    padding: 0 18px;
+    height: 44px;
+    width: 100%;
     cursor: pointer;
-    font-size: 18px;
+    transition: background 0.15s ease;
+  }
+
+  .btn-crear-tarea:hover {
+    background: #4A78D6;
   }
 
   /* Panel de stats */
@@ -531,18 +607,43 @@
     <h1>gestor-tareas $ <span id="cursor">_</span></h1>
   </header>
 
-  <form class="form-tarea" id="form-tarea">
-    <input type="text" id="titulo" placeholder="&gt; nueva tarea..." required />
-    <input type="text" id="descripcion" placeholder="descripción (opcional)" />
-    <input type="text" id="subtareas" placeholder="subtareas separadas por coma (opcional)" />
-    <input type="date" id="fecha-limite" aria-label="Fecha límite" />
-    <select id="prioridad">
-      <option value="media">media</option>
-      <option value="alta">alta</option>
-      <option value="baja">baja</option>
-    </select>
-    <button type="submit" class="btn-agregar" aria-label="Agregar tarea">+</button>
-  </form>
+  <div class="card">
+    <p class="card-label">Nueva tarea</p>
+    <form class="form-tarea" id="form-tarea">
+      <div class="campo">
+        <label for="titulo">Título</label>
+        <input type="text" id="titulo" placeholder="&gt; ¿qué hay que hacer?" required />
+      </div>
+
+      <div class="campo">
+        <label for="descripcion">Descripción</label>
+        <input type="text" id="descripcion" placeholder="Descripción" />
+      </div>
+
+      <div class="fila-fecha-prioridad">
+        <div class="campo">
+          <label for="fecha-limite">Fecha límite</label>
+          <input type="date" id="fecha-limite" aria-label="Fecha límite" />
+        </div>
+        <div class="campo">
+          <label for="prioridad">Prioridad</label>
+          <select id="prioridad">
+            <option value="media">media</option>
+            <option value="alta">alta</option>
+            <option value="baja">baja</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="button" class="btn-agregar-subtarea" id="btn-agregar-subtarea">+ agregar subtarea</button>
+      <div class="campo" id="campo-subtareas" hidden>
+        <label for="subtareas">Subtareas</label>
+        <input type="text" id="subtareas" placeholder="Separadas por coma" />
+      </div>
+
+      <button type="submit" class="btn-crear-tarea">Crear tarea</button>
+    </form>
+  </div>
 
   <div class="stats">
     <div class="stats-numeros">
@@ -769,6 +870,8 @@
       registrarActividad('creaste', titulo);
       mostrarToast('crear', `Creaste "${titulo}"`);
       form.reset();
+      document.getElementById('campo-subtareas').hidden = true;
+      document.getElementById('btn-agregar-subtarea').hidden = false;
       refrescar();
     });
 
@@ -858,6 +961,13 @@
           }
         }
       }
+    });
+
+    document.getElementById('btn-agregar-subtarea').addEventListener('click', (e) => {
+      const campo = document.getElementById('campo-subtareas');
+      campo.hidden = false;
+      e.target.hidden = true;
+      document.getElementById('subtareas').focus();
     });
 
     buscarInput.addEventListener('input', refrescar);
